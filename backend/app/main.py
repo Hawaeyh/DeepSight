@@ -1,14 +1,18 @@
 from fastapi import FastAPI
 
+from app.api.v1.health import router as health_router
+from app.core.config import settings
+
 app = FastAPI(
-    title="ML7-VIDS DeepSight API",
-    version="1.0.0",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
 )
+
+app.include_router(health_router)
+
 
 @app.get("/")
 def root():
     return {
-        "project": "ML7-VIDS DeepSight System",
-        "status": "Running",
-        "version": "1.0.0"
+        "message": "Welcome to ML7-VIDS DeepSight API"
     }
