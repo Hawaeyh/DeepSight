@@ -1,39 +1,51 @@
-export type PredictionType = "Real" | "Fake";
-
-export type RiskLevel = "Low" | "Medium" | "High";
-
-export interface ImageInformation {
-    filename: string;
-    width: number;
-    height: number;
-    faceDetected: boolean;
-    faceCount: number;
-}
-
-export interface PredictionInformation {
-    prediction: PredictionType;
-    confidence: number;
-    probabilityReal: number;
-    probabilityFake: number;
-    riskLevel: RiskLevel;
-    recommendation: string;
-}
-
-export interface ModelInformation {
-    name: string;
-    version: string;
-    device: string;
-    processingTime: number;
-}
-
 export interface ImageDetectionResponse {
-    analysisId: number;
 
-    image: ImageInformation;
+    id: number;
 
-    prediction: PredictionInformation;
+    filename: string;
 
-    model: ModelInformation;
+    file_path: string;
 
-    createdAt: string;
+    file_type: string;
+
+    file_extension: string;
+
+    file_size: number;
+
+    prediction: string;
+
+    confidence: number;
+
+    real_probability: number;
+
+    fake_probability: number;
+
+    deepfake_type: string | null;
+
+    type_confidence: number | null;
+
+    risk_level: string;
+
+    model_name: string;
+
+    model_version: string;
+
+    device: string;
+
+    processing_time: number;
+
+    status: string;
+
+    face_detected: boolean;
+
+    face_count: number;
+
+    image_width: number;
+
+    image_height: number;
+
+    created_at: string;
+
+    updated_at: string;
+
 }

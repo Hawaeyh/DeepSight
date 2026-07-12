@@ -175,7 +175,7 @@ export default function PredictionResultCard({
 
                         label="Risk"
 
-                        value={result.riskLevel}
+                        value={result.risk_level}
 
                     />
 
@@ -191,7 +191,7 @@ export default function PredictionResultCard({
 
                         label="Model"
 
-                        value={result.model}
+                        value={result.model_name}
 
                         icon={<BrainCircuit size={18}/>}
 
@@ -201,7 +201,7 @@ export default function PredictionResultCard({
 
                         label="Version"
 
-                        value={result.version}
+                        value={result.model_version}
 
                     />
 
@@ -209,7 +209,7 @@ export default function PredictionResultCard({
 
                         label="Processing"
 
-                        value={`${result.processingTime} sec`}
+                        value={`${result.processing_time} sec`}
 
                         icon={<Clock3 size={18}/>}
 
@@ -219,7 +219,7 @@ export default function PredictionResultCard({
 
                         label="Analysis ID"
 
-                        value={`#${result.analysisId}`}
+                        value={`#${result.id}`}
 
                         icon={<Database size={18}/>}
 

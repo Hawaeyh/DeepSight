@@ -1,110 +1,155 @@
 import Card from "../../../components/ui/Card";
-
-import type {
-
-    ImageDetectionResponse,
-
-} from "../types/image";
+import type { ImageMetadata } from "../types/metadata";
 
 interface Props {
+    metadata: ImageMetadata | null;
+    loading?: boolean;
+}
 
-    result: ImageDetectionResponse | null;
+interface MetadataItemProps {
+    label: string;
+    value: string;
+}
 
+function MetadataItem({
+    label,
+    value,
+}: MetadataItemProps) {
+    return (
+        <div className="flex items-center justify-between py-3 border-b border-slate-700 last:border-b-0">
+            <span className="text-sm text-slate-400">
+                {label}
+            </span>
+
+            <span className="text-sm font-medium text-white text-right break-all">
+                {value}
+            </span>
+        </div>
+    );
 }
 
 export default function MetadataCard({
-
-    result,
-
+    metadata,
+    loading = false,
 }: Props) {
 
-    if (!result) {
-
+    if (loading) {
         return (
+            <Card title="Image Metadata">
+                <div className="animate-pulse space-y-4">
 
+                    <div className="h-5 bg-slate-700 rounded"></div>
+                    <div className="h-5 bg-slate-700 rounded"></div>
+                    <div className="h-5 bg-slate-700 rounded"></div>
+                    <div className="h-5 bg-slate-700 rounded"></div>
+                    <div className="h-5 bg-slate-700 rounded"></div>
+                    <div className="h-5 bg-slate-700 rounded"></div>
+                    <div className="h-5 bg-slate-700 rounded"></div>
+
+                </div>
+            </Card>
+        );
+    }
+
+    if (!metadata) {
+        return (
             <Card title="Image Metadata">
 
-                <p className="text-slate-500">
+                <div className="flex flex-col items-center justify-center py-12">
 
-                    No metadata available.
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="w-14 h-14 text-slate-600 mb-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16
+                            16m-2-2l1.586-1.586a2 2 0 012.828
+                            0L20 14m-6-10h.01M6
+                            20h12a2 2 0 002-2V6a2 2
+                            0 00-2-2H6a2 2 0
+                            00-2 2v12a2 2 0
+                            002 2z"
+                        />
+                    </svg>
 
-                </p>
+                    <p className="text-slate-400 font-medium">
+                        No Image Selected
+                    </p>
+
+                    <p className="text-sm text-slate-500 mt-2 text-center">
+                        Upload an image to display its metadata.
+                    </p>
+
+                </div>
 
             </Card>
-
         );
-
     }
 
     return (
 
-        <Card title="Image Metadata">
+        <Card
+            title="Image Metadata"
+            subtitle="Basic information about the uploaded image."
+        >
 
-            <div className="space-y-4">
+            <div className="space-y-1">
 
-                <div>
+                <MetadataItem
+                    label="Filename"
+                    value={metadata.filename}
+                />
 
-                    <p className="text-slate-400">
+                <MetadataItem
+                    label="Extension"
+                    value={metadata.extension}
+                />
 
-                        Filename
+                <MetadataItem
+                    label="MIME Type"
+                    value={metadata.mimeType}
+                />
 
-                    </p>
+                <MetadataItem
+                    label="File Size"
+                    value={metadata.formattedFileSize}
+                />
 
-                    <h2>
+                <MetadataItem
+                    label="Resolution"
+                    value={metadata.resolution}
+                />
 
-                        {result.image.filename}
+                <MetadataItem
+                    label="Width"
+                    value={`${metadata.width}px`}
+                />
 
-                    </h2>
+                <MetadataItem
+                    label="Height"
+                    value={`${metadata.height}px`}
+                />
 
-                </div>
+                <MetadataItem
+                    label="Aspect Ratio"
+                    value={metadata.aspectRatio}
+                />
 
-                <div>
+                <MetadataItem
+                    label="Orientation"
+                    value={metadata.orientation}
+                />
 
-                    <p className="text-slate-400">
-
-                        Resolution
-
-                    </p>
-
-                    <h2>
-
-                        {result.image.width} × {result.image.height}
-
-                    </h2>
-
-                </div>
-
-                <div>
-
-                    <p className="text-slate-400">
-
-                        Face Detected
-
-                    </p>
-
-                    <h2>
-
-                        {result.image.faceDetected ? "Yes" : "No"}
-
-                    </h2>
-
-                </div>
-
-                <div>
-
-                    <p className="text-slate-400">
-
-                        Face Count
-
-                    </p>
-
-                    <h2>
-
-                        {result.image.faceCount}
-
-                    </h2>
-
-                </div>
+                <MetadataItem
+                    label="Upload Time"
+                    value={metadata.uploadTime}
+                />
 
             </div>
 

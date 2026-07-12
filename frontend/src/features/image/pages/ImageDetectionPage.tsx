@@ -7,6 +7,10 @@ import DetectionPipeline from "../components/DetectionPipeline";
 import DetectionStatistics from "../components/DetectionStatistics";
 import RecentAnalysisCard from "../components/RecentAnalysisCard";
 import ActionBar from "../components/ActionBar";
+import MetadataCard from "../components/MetadataCard";
+import AIInformationCard from "../components/AIInformationCard";
+import RecommendationCard from "../components/RecommendationCard";
+import ModelCard from "../components/ModelCard";
 
 import EmptyState from "../../../components/ui/EmptyState";
 import Spinner from "../../../components/ui/Spinner";
@@ -27,23 +31,16 @@ export default function ImageDetectionPage() {
     const {
 
         selectedFile,
-
         preview,
-
+        metadata,
         result,
-
         recent,
-
         loading,
-
         error,
 
         selectImage,
-
         detectImage,
-
         handleDownloadReport,
-
         reset,
 
     } = useImageDetection();
@@ -152,6 +149,34 @@ export default function ImageDetectionPage() {
 
                 />
 
+            </div>
+
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                <MetadataCard
+                    metadata={metadata}
+                    loading={loading && !metadata}
+                />
+
+                <AIInformationCard
+
+                    result={result}
+
+                />
+
+            </div>
+
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+
+                <RecommendationCard
+                    result={result}
+                />
+
+                <ModelCard
+                    result={result}
+                />
+                
             </div>
 
             {/* ======================================== */}

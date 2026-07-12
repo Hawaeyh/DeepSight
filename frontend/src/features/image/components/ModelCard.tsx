@@ -1,11 +1,40 @@
 import Card from "../../../components/ui/Card";
-import Metric from "../../../components/ui/Metric";
 
-import type { ImageDetectionResponse } from "../../../types/image";
+import type { ImageDetectionResponse } from "../types/image";
 
 interface Props {
-
     result: ImageDetectionResponse | null;
+}
+
+interface ItemProps {
+    label: string;
+    value: string;
+}
+
+function Item({
+    label,
+    value,
+}: ItemProps) {
+
+    return (
+
+        <div className="flex justify-between items-center py-3 border-b border-slate-700 last:border-b-0">
+
+            <span className="text-slate-400 text-sm">
+
+                {label}
+
+            </span>
+
+            <span className="text-white font-medium text-right">
+
+                {value}
+
+            </span>
+
+        </div>
+
+    );
 
 }
 
@@ -19,13 +48,26 @@ export default function ModelCard({
 
         return (
 
-            <Card title="AI Model">
+            <Card
+                title="AI Model"
+                subtitle="Detection model information"
+            >
 
-                <p className="text-slate-500">
+                <div className="flex flex-col items-center justify-center py-12">
 
-                    No model information.
+                    <p className="text-slate-400 font-medium">
 
-                </p>
+                        No Model Information
+
+                    </p>
+
+                    <p className="text-slate-500 text-sm mt-2">
+
+                        Run image detection to display model information.
+
+                    </p>
+
+                </div>
 
             </Card>
 
@@ -36,45 +78,60 @@ export default function ModelCard({
     return (
 
         <Card
-
             title="AI Model"
-
-            subtitle="Detection Engine"
-
+            subtitle="DeepSight Detection Model"
         >
 
-            <div className="space-y-4">
+            <div className="space-y-1">
 
-                <Metric
-
+                <Item
                     label="Model"
-
-                    value={result.model.name}
-
+                    value={result.model_name}
                 />
 
-                <Metric
-
+                <Item
                     label="Version"
-
-                    value={result.model.version}
-
+                    value={result.model_version}
                 />
 
-                <Metric
-
-                    label="Device"
-
-                    value={result.model.device.toUpperCase()}
-
+                <Item
+                    label="Framework"
+                    value="PyTorch"
                 />
 
-                <Metric
+                <Item
+                    label="Inference Device"
+                    value={result.device.toUpperCase()}
+                />
 
-                    label="Processing"
+                <Item
+                    label="Input Resolution"
+                    value="224 × 224"
+                />
 
-                    value={`${result.processing.time.toFixed(2)} sec`}
+                <Item
+                    label="Classification"
+                    value="Binary"
+                />
 
+                <Item
+                    label="Classes"
+                    value="Real / Fake"
+                />
+
+                <Item
+                    label="Architecture"
+                    value="EfficientNet-B0"
+                />
+
+                <Item
+                    label="Dataset"
+                    value="DeepSight Binary V3"
+                />
+
+                <Item
+                    label="Status"
+                    value="Ready"
                 />
 
             </div>

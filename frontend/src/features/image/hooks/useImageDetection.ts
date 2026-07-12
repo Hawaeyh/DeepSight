@@ -116,8 +116,14 @@ export function useImageDetection() {
 
             setError(null);
 
-            const response =
-                await analyzeImage(selectedFile);
+            const response = await analyzeImage(selectedFile);
+
+            console.log("IMAGE RESPONSE");
+            console.dir(response, { depth: null });
+
+            console.log("Prediction:", response.prediction);
+            console.log("Model:", response.model);
+            console.log("Confidence:", response.prediction?.confidence);
 
             setResult(response);
 
@@ -152,17 +158,12 @@ export function useImageDetection() {
         try {
 
             const pdf = await downloadReport(
-
-                result.analysisId
-
+                result.id
             );
 
             downloadFile(
-
                 pdf,
-
-                `Analysis_${result.analysisId}.pdf`
-
+                `Analysis_${result.id}.pdf`
             );
 
         }
