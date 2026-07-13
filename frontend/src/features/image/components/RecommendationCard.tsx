@@ -1,70 +1,107 @@
 import Card from "../../../components/ui/Card";
+
+import {
+    CheckCircle2,
+    AlertTriangle,
+    ShieldCheck,
+    ShieldAlert,
+    Info,
+} from "lucide-react";
+
 import type { ImageDetectionResponse } from "../types/image";
 
 interface Props {
     result: ImageDetectionResponse | null;
 }
 
-function getAssessment(
-    prediction: "Real" | "Fake",
-    confidence: number,
-) {
+interface Recommendation {
 
-    if (prediction === "Real") {
+    title: string;
+
+    icon: React.ReactNode;
+
+    color: string;
+
+    assessment: string;
+
+    recommendation: string;
+
+    notes: string[];
+
+}
+
+function buildRecommendation(
+    result: ImageDetectionResponse,
+): Recommendation {
+
+    const isReal = result.prediction === "Real";
+
+    if (isReal) {
 
         return {
+
             title: "Authentic Image",
-            risk: "Low",
+
+            icon: <ShieldCheck size={56} className="text-green-500" />,
+
+            color: "text-green-400",
+
+            assessment:
+                "The AI model predicts that this image is authentic.",
+
             recommendation:
-                confidence >= 95
-                    ? "This image appears authentic and is safe for normal use."
-                    : "This image is likely authentic. Manual verification is recommended for critical applications.",
-            notes:
-                "No obvious deepfake manipulation artefacts were detected.",
+                "This image appears safe for normal viewing, sharing and business use.",
+
+            notes: [
+
+                `Real Probability: ${result.real_probability.toFixed(2)}%`,
+
+                `Fake Probability: ${result.fake_probability.toFixed(2)}%`,
+
+                "No obvious manipulation characteristics detected.",
+
+                "Manual verification is optional.",
+
+            ],
+
         };
 
     }
 
     return {
-        title: "Possible AI Generated Image",
-        risk: confidence >= 95
-            ? "High"
-            : "Medium",
+
+        title: "Potential Deepfake",
+
+        icon: <ShieldAlert size={56} className="text-red-500" />,
+
+        color: "text-red-400",
+
+        assessment:
+            "The AI model detected characteristics commonly associated with manipulated images.",
+
         recommendation:
-            confidence >= 95
-                ? "Strong evidence of AI manipulation detected. Do not rely on this image without further verification."
-                : "Potential manipulation detected. Further investigation is recommended.",
-        notes:
-            "Facial inconsistencies or synthetic artefacts may be present.",
+            "Do not fully trust this image until manual verification has been performed.",
+
+        notes: [
+
+            `Fake Probability: ${result.fake_probability.toFixed(2)}%`,
+
+            `Real Probability: ${result.real_probability.toFixed(2)}%`,
+
+            "Possible AI-generated or manipulated facial features.",
+
+            "Human verification is highly recommended.",
+
+        ],
+
     };
 
 }
 
-function RiskBadge({
-    risk,
-}: {
-    risk: string;
-}) {
-
-    const color =
-        risk === "Low"
-            ? "bg-green-500/20 text-green-400"
-            : risk === "Medium"
-            ? "bg-yellow-500/20 text-yellow-400"
-            : "bg-red-500/20 text-red-400";
-
-    return (
-        <span
-            className={`px-3 py-1 rounded-full text-sm font-semibold ${color}`}
-        >
-            {risk}
-        </span>
-    );
-
-}
-
 export default function RecommendationCard({
+
     result,
+
 }: Props) {
 
     if (!result) {
@@ -73,18 +110,12 @@ export default function RecommendationCard({
 
             <Card
                 title="AI Recommendation"
-                subtitle="Decision support"
+                subtitle="Generated after AI analysis"
             >
 
-                <div className="py-12 text-center">
+                <div className="py-14 text-center text-slate-500">
 
-                    <p className="text-slate-400 font-medium">
-                        No Recommendation
-                    </p>
-
-                    <p className="text-slate-500 mt-2 text-sm">
-                        Analyze an image to receive an AI assessment.
-                    </p>
+                    Analyze an image to receive an AI recommendation.
 
                 </div>
 
@@ -94,67 +125,125 @@ export default function RecommendationCard({
 
     }
 
-    const assessment = getAssessment(
-        result.prediction,
-        result.confidence,
-    );
+    const recommendation =
+        buildRecommendation(result);
 
     return (
 
         <Card
             title="AI Recommendation"
-            subtitle="Generated from the prediction result"
+            subtitle="Generated from AI prediction"
         >
 
-            <div className="space-y-6">
+            <div className="space-y-8">
 
-                <div>
+                {/* Header */}
 
-                    <p className="text-sm text-slate-400">
-                        Assessment
-                    </p>
+                <div className="text-center">
 
-                    <h2 className="text-2xl font-bold mt-1">
-                        {assessment.title}
+                    <div className="flex justify-center mb-4">
+
+                        {recommendation.icon}
+
+                    </div>
+
+                    <h2
+                        className={`text-3xl font-bold ${recommendation.color}`}
+                    >
+
+                        {recommendation.title}
+
                     </h2>
 
                 </div>
 
-                <div>
+                {/* Assessment */}
 
-                    <p className="text-sm text-slate-400 mb-2">
-                        Risk Level
+                <section>
+
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+
+                        <Info size={18} />
+
+                        Assessment
+
+                    </h3>
+
+                    <p className="text-slate-300 leading-7">
+
+                        {recommendation.assessment}
+
                     </p>
 
-                    <RiskBadge
-                        risk={assessment.risk}
-                    />
+                </section>
 
-                </div>
+                {/* Recommendation */}
 
-                <div>
+                <section>
 
-                    <p className="text-sm text-slate-400">
+                    <h3 className="font-semibold mb-3 flex items-center gap-2">
+
+                        <CheckCircle2 size={18} />
+
                         Recommendation
+
+                    </h3>
+
+                    <p className="text-slate-300 leading-7">
+
+                        {recommendation.recommendation}
+
                     </p>
 
-                    <p className="mt-2 leading-7">
-                        {assessment.recommendation}
-                    </p>
+                </section>
 
-                </div>
+                {/* Notes */}
 
-                <div>
+                <section>
 
-                    <p className="text-sm text-slate-400">
-                        Notes
-                    </p>
+                    <h3 className="font-semibold mb-4 flex items-center gap-2">
 
-                    <p className="mt-2 leading-7 text-slate-300">
-                        {assessment.notes}
-                    </p>
+                        <AlertTriangle size={18} />
 
-                </div>
+                        AI Notes
+
+                    </h3>
+
+                    <ul className="space-y-3">
+
+                        {
+
+                            recommendation.notes.map(
+
+                                (note, index) => (
+
+                                    <li
+                                        key={index}
+                                        className="flex items-start gap-3 text-slate-300"
+                                    >
+
+                                        <CheckCircle2
+                                            size={18}
+                                            className="text-green-400 mt-1"
+                                        />
+
+                                        <span>
+
+                                            {note}
+
+                                        </span>
+
+                                    </li>
+
+                                ),
+
+                            )
+
+                        }
+
+                    </ul>
+
+                </section>
 
             </div>
 

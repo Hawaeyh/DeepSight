@@ -11,6 +11,7 @@ import MetadataCard from "../components/MetadataCard";
 import AIInformationCard from "../components/AIInformationCard";
 import RecommendationCard from "../components/RecommendationCard";
 import ModelCard from "../components/ModelCard";
+import ProbabilityCard from "../components/ProbabilityCard";
 
 import EmptyState from "../../../components/ui/EmptyState";
 import Spinner from "../../../components/ui/Spinner";
@@ -22,11 +23,7 @@ export default function ImageDetectionPage() {
 
     const navigate = useNavigate();
 
-    const {
-
-        overview,
-
-    } = useDashboard();
+    const { overview } = useDashboard();
 
     const {
 
@@ -49,7 +46,7 @@ export default function ImageDetectionPage() {
 
         return (
 
-            <div className="flex justify-center items-center h-[70vh]">
+            <div className="flex items-center justify-center h-[70vh]">
 
                 <Spinner />
 
@@ -64,7 +61,7 @@ export default function ImageDetectionPage() {
         <div className="space-y-8">
 
             {/* ======================================== */}
-            {/* Page Header */}
+            {/* Header */}
             {/* ======================================== */}
 
             <div>
@@ -75,9 +72,9 @@ export default function ImageDetectionPage() {
 
                 </h1>
 
-                <p className="text-slate-400 mt-2">
+                <p className="mt-2 text-slate-400">
 
-                    Upload an image to detect whether it is Real or AI Generated.
+                    Upload an image to detect whether it is authentic or AI generated using the DeepSight AI Engine.
 
                 </p>
 
@@ -87,37 +84,37 @@ export default function ImageDetectionPage() {
             {/* Error */}
             {/* ======================================== */}
 
-            {
+            {error && (
 
-                error && (
+                <EmptyState
 
-                    <EmptyState
+                    title="Detection Error"
 
-                        title="Detection Error"
-
-                        description={error}
-
-                    />
-
-                )
-
-            }
-
-            {/* ======================================== */}
-            {/* Upload + AI Result */}
-            {/* ======================================== */}
-
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-
-                <UploadCard
-
-                    selectedFile={selectedFile}
-
-                    loading={loading}
-
-                    onSelect={selectImage}
+                    description={error}
 
                 />
+
+            )}
+
+            {/* ======================================== */}
+            {/* Upload */}
+            {/* ======================================== */}
+
+            <UploadCard
+
+                selectedFile={selectedFile}
+
+                loading={loading}
+
+                onSelect={selectImage}
+
+            />
+
+            {/* ======================================== */}
+            {/* Hero Result */}
+            {/* ======================================== */}
+
+            {result && (
 
                 <PredictionResultCard
 
@@ -125,7 +122,7 @@ export default function ImageDetectionPage() {
 
                 />
 
-            </div>
+            )}
 
             {/* ======================================== */}
             {/* Preview + Pipeline */}
@@ -151,13 +148,17 @@ export default function ImageDetectionPage() {
 
             </div>
 
+            {/* ======================================== */}
+            {/* Metadata + AI Info */}
+            {/* ======================================== */}
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                <MetadataCard
-                    metadata={metadata}
-                    loading={loading && !metadata}
-                />
+            <MetadataCard
+                metadata={metadata}
+                result={result}
+                loading={loading && !metadata}
+            />
 
                 <AIInformationCard
 
@@ -167,27 +168,35 @@ export default function ImageDetectionPage() {
 
             </div>
 
+            {/* ======================================== */}
+            {/* Probability + Recommendation */}
+            {/* ======================================== */}
+
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                <RecommendationCard
+                <ProbabilityCard
+
                     result={result}
+
                 />
 
-                <ModelCard
+                <RecommendationCard
+
                     result={result}
+
                 />
-                
+
             </div>
 
             {/* ======================================== */}
-            {/* Recent + Statistics */}
+            {/* Model + Statistics */}
             {/* ======================================== */}
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-                <RecentAnalysisCard
+                <ModelCard
 
-                    data={recent}
+                    result={result}
 
                 />
 
@@ -206,7 +215,17 @@ export default function ImageDetectionPage() {
             </div>
 
             {/* ======================================== */}
-            {/* Bottom Actions */}
+            {/* Recent Analysis */}
+            {/* ======================================== */}
+
+            <RecentAnalysisCard
+
+                data={recent}
+
+            />
+
+            {/* ======================================== */}
+            {/* Bottom Action Bar */}
             {/* ======================================== */}
 
             <ActionBar

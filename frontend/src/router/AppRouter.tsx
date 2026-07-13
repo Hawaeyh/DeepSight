@@ -9,7 +9,7 @@ import AppLayout from "../layouts/AppLayout";
 import DashboardPage from "../pages/DashboardPage";
 import ImageDetectionPage from "../features/image/pages/ImageDetectionPage";
 import VideoDetectionPage from "../pages/VideoDetectionPage";
-import HistoryPage from "../pages/HistoryPage";
+import HistoryPage from "../features/history/pages/HistoryPage";
 import ReportsPage from "../pages/ReportsPage";
 import SettingsPage from "../pages/SettingsPage";
 

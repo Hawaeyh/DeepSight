@@ -1,9 +1,6 @@
-import type { ImageMetadata, ImageOrientation } from "../types/metadata";
+import type { ImageMetadata } from "../types/metadata";
 
-/**
- * Convert bytes to readable size.
- */
-export function formatFileSize(bytes: number): string {
+function formatFileSize(bytes: number): string {
 
     if (bytes < 1024) {
 
@@ -17,34 +14,23 @@ export function formatFileSize(bytes: number): string {
 
     }
 
-    if (bytes < 1024 * 1024 * 1024) {
-
-        return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-
-    }
-
-    return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
 
 }
 
-/**
- * Greatest Common Divisor
- */
 function gcd(a: number, b: number): number {
 
-    return b === 0 ? a : gcd(b, a % b);
+    return b === 0
+
+        ? a
+
+        : gcd(b, a % b);
 
 }
 
-/**
- * Calculate aspect ratio.
- */
-export function calculateAspectRatio(
-
+function getAspectRatio(
     width: number,
-
     height: number,
-
 ): string {
 
     const divisor = gcd(width, height);
@@ -53,16 +39,10 @@ export function calculateAspectRatio(
 
 }
 
-/**
- * Detect image orientation.
- */
-export function getOrientation(
-
+function getOrientation(
     width: number,
-
     height: number,
-
-): ImageOrientation {
+): "Landscape" | "Portrait" | "Square" {
 
     if (width > height) {
 
@@ -80,30 +60,20 @@ export function getOrientation(
 
 }
 
-/**
- * Read metadata from image.
- */
 export async function getImageMetadata(
-
     file: File,
-
 ): Promise<ImageMetadata> {
 
     return new Promise((resolve, reject) => {
 
         const image = new Image();
 
-        const url = URL.createObjectURL(file);
+        const objectUrl = URL.createObjectURL(file);
 
         image.onload = () => {
 
             const extension =
-
                 file.name.split(".").pop()?.toUpperCase() ?? "";
-
-            const width = image.width;
-
-            const height = image.height;
 
             resolve({
 
@@ -115,65 +85,48 @@ export async function getImageMetadata(
 
                 fileSize: file.size,
 
-                formattedFileSize:
+                formattedFileSize: formatFileSize(file.size),
 
-                    formatFileSize(file.size),
+                width: image.width,
 
-                width,
+                height: image.height,
 
-                height,
+                resolution: `${image.width} × ${image.height}`,
 
-                resolution:
+                aspectRatio: getAspectRatio(
+                    image.width,
+                    image.height,
+                ),
 
-                    `${width} × ${height}`,
-
-                aspectRatio:
-
-                    calculateAspectRatio(
-
-                        width,
-
-                        height,
-
-                    ),
-
-                orientation:
-
-                    getOrientation(
-
-                        width,
-
-                        height,
-
-                    ),
+                orientation: getOrientation(
+                    image.width,
+                    image.height,
+                ),
 
                 uploadTime:
-
                     new Date().toLocaleString(),
 
             });
 
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(objectUrl);
 
         };
 
         image.onerror = () => {
 
-            URL.revokeObjectURL(url);
+            URL.revokeObjectURL(objectUrl);
 
             reject(
 
                 new Error(
-
-                    "Unable to load image."
-
-                )
+                    "Unable to read image metadata.",
+                ),
 
             );
 
         };
 
-        image.src = url;
+        image.src = objectUrl;
 
     });
 

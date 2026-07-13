@@ -1,6 +1,6 @@
 import Card from "../../../components/ui/Card";
 import ProgressBar from "../../../components/ui/ProgressBar";
-import type { ImageDetectionResponse } from "../types/image";
+import type {    Analysis, } from "@/types/analysis";
 
 interface Props {
     result: ImageDetectionResponse | null;

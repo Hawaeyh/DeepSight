@@ -1,40 +1,24 @@
+import type {
+
+    Analysis,
+
+} from "./analysis";
+
 export interface DashboardOverview {
 
     totalDetection: number;
 
-    totalImages: number;
+    todayDetection: number;
 
-    totalVideos: number;
-
-    totalFake: number;
-
-    totalReal: number;
+    weekDetection: number;
 
     averageConfidence: number;
 
-    averageProcessingTime: number;
+    realCount: number;
 
-    latestPrediction?: string;
+    fakeCount: number;
 
-    latestConfidence?: number;
-
-    latestModel?: string;
-
-    latestVersion?: string;
-
-    device?: string;
-
-    todayDetection?: number;
-
-    weekDetection?: number;
-
-    fakePercentage?: number;
-
-    realPercentage?: number;
-
-    imagePercentage?: number;
-
-    videoPercentage?: number;
+    device: string;
 
 }
 
@@ -42,48 +26,26 @@ export interface DetectionTrend {
 
     date: string;
 
-    count: number;
+    total: number;
 
 }
 
 export interface PredictionDistribution {
 
-    fake: number;
-
     real: number;
 
-    image: number;
-
-    video: number;
-
-    fakePercentage: number;
-
-    realPercentage: number;
-
-    imagePercentage: number;
-
-    videoPercentage: number;
+    fake: number;
 
 }
 
-export interface RecentDetection {
+export interface DashboardResponse {
 
-    id: number;
+    overview: DashboardOverview;
 
-    filename: string;
+    trend: DetectionTrend[];
 
-    fileType: string;
+    distribution: PredictionDistribution;
 
-    prediction: string;
-
-    confidence: number;
-
-    riskLevel: string;
-
-    model: string;
-
-    version: string;
-
-    createdAt: string;
+    recent: Analysis[];
 
 }

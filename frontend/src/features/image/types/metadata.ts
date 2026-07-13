@@ -1,39 +1,25 @@
-export type PredictionType = "Real" | "Fake";
+export interface ImageMetadata {
 
-export type RiskLevel = "Low" | "Medium" | "High";
-
-export interface ImageInformation {
     filename: string;
+
+    extension: string;
+
+    mimeType: string;
+
+    fileSize: number;
+
+    formattedFileSize: string;
+
     width: number;
+
     height: number;
-    faceDetected: boolean;
-    faceCount: number;
-}
 
-export interface PredictionInformation {
-    prediction: PredictionType;
-    confidence: number;
-    probabilityReal: number;
-    probabilityFake: number;
-    riskLevel: RiskLevel;
-    recommendation: string;
-}
+    resolution: string;
 
-export interface ModelInformation {
-    name: string;
-    version: string;
-    device: string;
-    processingTime: number;
-}
+    aspectRatio: string;
 
-export interface ImageDetectionResponse {
-    analysisId: number;
+    orientation: "Landscape" | "Portrait" | "Square";
 
-    image: ImageInformation;
+    uploadTime: string;
 
-    prediction: PredictionInformation;
-
-    model: ModelInformation;
-
-    createdAt: string;
 }

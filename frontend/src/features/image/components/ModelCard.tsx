@@ -1,32 +1,47 @@
 import Card from "../../../components/ui/Card";
 
+import {
+    BrainCircuit,
+    Cpu,
+    Database,
+    Layers3,
+    Monitor,
+    ShieldCheck,
+    Gauge,
+    Box,
+} from "lucide-react";
+
 import type { ImageDetectionResponse } from "../types/image";
 
 interface Props {
     result: ImageDetectionResponse | null;
 }
 
-interface ItemProps {
+interface InfoRowProps {
+    icon: React.ReactNode;
     label: string;
     value: string;
 }
 
-function Item({
+function InfoRow({
+    icon,
     label,
     value,
-}: ItemProps) {
+}: InfoRowProps) {
 
     return (
 
-        <div className="flex justify-between items-center py-3 border-b border-slate-700 last:border-b-0">
+        <div className="flex items-center justify-between py-3 border-b border-slate-700 last:border-0">
 
-            <span className="text-slate-400 text-sm">
+            <div className="flex items-center gap-2 text-slate-400">
 
-                {label}
+                {icon}
 
-            </span>
+                <span>{label}</span>
 
-            <span className="text-white font-medium text-right">
+            </div>
+
+            <span className="font-semibold text-white">
 
                 {value}
 
@@ -50,22 +65,12 @@ export default function ModelCard({
 
             <Card
                 title="AI Model"
-                subtitle="Detection model information"
+                subtitle="DeepSight Detection Model"
             >
 
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="py-16 text-center text-slate-500">
 
-                    <p className="text-slate-400 font-medium">
-
-                        No Model Information
-
-                    </p>
-
-                    <p className="text-slate-500 text-sm mt-2">
-
-                        Run image detection to display model information.
-
-                    </p>
+                    Analyze an image to view model information.
 
                 </div>
 
@@ -82,57 +87,100 @@ export default function ModelCard({
             subtitle="DeepSight Detection Model"
         >
 
-            <div className="space-y-1">
+            <div className="space-y-6">
 
-                <Item
-                    label="Model"
-                    value={result.model_name}
-                />
+                <div className="text-center">
 
-                <Item
-                    label="Version"
-                    value={result.model_version}
-                />
+                    <BrainCircuit
+                        size={60}
+                        className="mx-auto text-blue-500"
+                    />
 
-                <Item
-                    label="Framework"
-                    value="PyTorch"
-                />
+                    <h2 className="text-2xl font-bold mt-4">
 
-                <Item
-                    label="Inference Device"
-                    value={result.device.toUpperCase()}
-                />
+                        {result.model_name}
 
-                <Item
-                    label="Input Resolution"
-                    value="224 × 224"
-                />
+                    </h2>
 
-                <Item
-                    label="Classification"
-                    value="Binary"
-                />
+                    <p className="text-slate-400 mt-2">
 
-                <Item
-                    label="Classes"
-                    value="Real / Fake"
-                />
+                        Version {result.model_version}
 
-                <Item
-                    label="Architecture"
-                    value="EfficientNet-B0"
-                />
+                    </p>
 
-                <Item
-                    label="Dataset"
-                    value="DeepSight Binary V3"
-                />
+                </div>
 
-                <Item
-                    label="Status"
-                    value="Ready"
-                />
+                <div className="border-t border-slate-700 pt-4">
+
+                    <InfoRow
+                        icon={<BrainCircuit size={18}/>}
+                        label="Model"
+                        value={result.model_name}
+                    />
+
+                    <InfoRow
+                        icon={<Box size={18}/>}
+                        label="Version"
+                        value={result.model_version}
+                    />
+
+                    <InfoRow
+                        icon={<Cpu size={18}/>}
+                        label="Framework"
+                        value="PyTorch"
+                    />
+
+                    <InfoRow
+                        icon={<Monitor size={18}/>}
+                        label="Inference Device"
+                        value={result.device.toUpperCase()}
+                    />
+
+                    <InfoRow
+                        icon={<Layers3 size={18}/>}
+                        label="Input Resolution"
+                        value="224 × 224"
+                    />
+
+                    <InfoRow
+                        icon={<ShieldCheck size={18}/>}
+                        label="Classification"
+                        value="Binary"
+                    />
+
+                    <InfoRow
+                        icon={<Database size={18}/>}
+                        label="Dataset"
+                        value="DeepSight Binary V3"
+                    />
+
+                    <InfoRow
+                        icon={<Gauge size={18}/>}
+                        label="Inference Speed"
+                        value={`${result.processing_time.toFixed(2)} sec`}
+                    />
+
+                </div>
+
+                <div className="border-t border-slate-700 pt-5">
+
+                    <div className="flex items-center justify-between">
+
+                        <span className="text-slate-400">
+
+                            Model Status
+
+                        </span>
+
+                        <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm font-semibold">
+
+                            READY
+
+                        </span>
+
+                    </div>
+
+                </div>
 
             </div>
 

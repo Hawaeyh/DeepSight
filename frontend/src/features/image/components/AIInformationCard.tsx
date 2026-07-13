@@ -1,44 +1,46 @@
 import Card from "../../../components/ui/Card";
 
-import type {
+import {
+    BrainCircuit,
+    CalendarClock,
+    CheckCircle2,
+    Clock3,
+    Cpu,
+    Database,
+    ShieldCheck,
+} from "lucide-react";
 
-    ImageDetectionResponse,
-
-} from "../types/image";
+import type { ImageDetectionResponse } from "../types/image";
 
 interface Props {
-
     result: ImageDetectionResponse | null;
-
 }
 
-interface ItemProps {
-
+interface InfoRowProps {
+    icon: React.ReactNode;
     label: string;
-
     value: string;
-
 }
 
-function Item({
-
+function InfoRow({
+    icon,
     label,
-
     value,
-
-}: ItemProps) {
+}: InfoRowProps) {
 
     return (
 
-        <div className="flex justify-between items-center py-3 border-b border-slate-700 last:border-b-0">
+        <div className="flex items-center justify-between py-3 border-b border-slate-700 last:border-0">
 
-            <span className="text-slate-400 text-sm">
+            <div className="flex items-center gap-2 text-slate-400">
 
-                {label}
+                {icon}
 
-            </span>
+                <span>{label}</span>
 
-            <span className="font-medium text-white text-right">
+            </div>
+
+            <span className="font-semibold text-white">
 
                 {value}
 
@@ -51,9 +53,7 @@ function Item({
 }
 
 export default function AIInformationCard({
-
     result,
-
 }: Props) {
 
     if (!result) {
@@ -61,48 +61,13 @@ export default function AIInformationCard({
         return (
 
             <Card
-
                 title="AI Information"
-
-                subtitle="AI inference information"
-
+                subtitle="DeepSight AI Inference"
             >
 
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="py-16 text-center text-slate-500">
 
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="w-14 h-14 text-slate-600 mb-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-
-                        <path
-
-                            strokeLinecap="round"
-
-                            strokeLinejoin="round"
-
-                            strokeWidth={1.5}
-
-                            d="M9.75 17L15 12l-5.25-5"
-
-                        />
-
-                    </svg>
-
-                    <p className="text-slate-400 font-medium">
-
-                        No Detection Available
-
-                    </p>
-
-                    <p className="text-sm text-slate-500 mt-2 text-center">
-
-                        AI information will appear after image analysis.
-
-                    </p>
+                    Analyze an image to display AI inference information.
 
                 </div>
 
@@ -115,98 +80,88 @@ export default function AIInformationCard({
     return (
 
         <Card
-
             title="AI Information"
-
-            subtitle="DeepSight AI Inference Details"
-
+            subtitle="DeepSight AI Inference"
         >
 
-            <div className="space-y-1">
+            <div className="space-y-6">
 
-                <Item
+                {/* Header */}
 
-                    label="Analysis ID"
+                <div className="text-center">
 
-                    value={`#${result.id}`}
+                    <BrainCircuit
+                        size={60}
+                        className="mx-auto text-cyan-400"
+                    />
 
-                />
+                    <h2 className="text-2xl font-bold mt-4">
 
-                <Item
+                        DeepSight AI
 
-                    label="Detection Type"
+                    </h2>
 
-                    value="Image"
+                    <p className="text-slate-400 mt-2">
 
-                />
+                        Binary Deepfake Detection
 
-                <Item
+                    </p>
 
-                    label="Prediction"
+                </div>
 
-                    value={result.prediction}
+                {/* Information */}
 
-                />
+                <div className="border-t border-slate-700 pt-4">
 
-                <Item
+                    <InfoRow
+                        icon={<Database size={18}/>}
+                        label="Analysis ID"
+                        value={`#${result.id}`}
+                    />
 
-                    label="Confidence"
+                    <InfoRow
+                        icon={<ShieldCheck size={18}/>}
+                        label="Prediction"
+                        value={result.prediction}
+                    />
 
-                    value={`${result.confidence.toFixed(2)}%`}
+                    <InfoRow
+                        icon={<Cpu size={18}/>}
+                        label="Inference Device"
+                        value={result.device.toUpperCase()}
+                    />
 
-                />
+                    <InfoRow
+                        icon={<BrainCircuit size={18}/>}
+                        label="Model"
+                        value={result.model_name}
+                    />
 
-                <Item
+                    <InfoRow
+                        icon={<Database size={18}/>}
+                        label="Model Version"
+                        value={result.model_version}
+                    />
 
-                    label="Risk Level"
+                    <InfoRow
+                        icon={<Clock3 size={18}/>}
+                        label="Processing Time"
+                        value={`${result.processing_time.toFixed(2)} sec`}
+                    />
 
-                    value={result.risk_level}
+                    <InfoRow
+                        icon={<CheckCircle2 size={18}/>}
+                        label="Status"
+                        value={result.status}
+                    />
 
-                />
+                    <InfoRow
+                        icon={<CalendarClock size={18}/>}
+                        label="Detection Time"
+                        value={new Date(result.created_at).toLocaleString()}
+                    />
 
-                <Item
-
-                    label="Model"
-
-                    value={result.model_name}
-
-                />
-
-                <Item
-
-                    label="Version"
-
-                    value={result.model_version}
-
-                />
-
-                <Item
-
-                    label="Inference Device"
-
-                    value={result.device.toUpperCase()}
-
-                />
-
-                <Item
-
-                    label="Processing Time"
-
-                    value={`${result.processing_time.toFixed(2)} sec`}
-
-                />
-
-                <Item
-
-                    label="Detection Time"
-
-                    value={new Date(
-
-                        result.created_at
-
-                    ).toLocaleString()}
-
-                />
+                </div>
 
             </div>
 

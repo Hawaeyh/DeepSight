@@ -11,7 +11,7 @@ import { getRecentDetection } from "../../../services/dashboard.service";
 
 import { downloadFile } from "../utils/downloadFile";
 
-import type { ImageDetectionResponse } from "../../../types/image";
+import type { ImageDetectionResponse } from "../types/image";
 import type { RecentDetection } from "../../../types/dashboard";
 
 export function useImageDetection() {
