@@ -7,12 +7,13 @@ from PIL import Image
 from torchvision import transforms
 
 from app.ai.models.model_loader import (
-    binary_model,
     DEVICE,
+    get_binary_model,
 )
+from app.core.paths import VIDEO_FRAME_DIR
 
 MODEL_NAME = "EfficientNet-B0"
-MODEL_VERSION = "Binary V3"
+MODEL_VERSION = "Binary V2"
 
 transform = transforms.Compose([
     transforms.Resize((224, 224)),
@@ -73,6 +74,8 @@ def predict_video(video_path: str):
 
     start = time.time()
 
+    binary_model, _ = get_binary_model("efficientnet")
+
     cap = cv2.VideoCapture(video_path)
 
     fps = cap.get(cv2.CAP_PROP_FPS)
@@ -87,7 +90,7 @@ def predict_video(video_path: str):
 
     cap.release()
 
-    frame_dir = Path("uploads/video_frames")
+    frame_dir = VIDEO_FRAME_DIR / Path(video_path).stem
 
     total = extract_frames(
         video_path,
@@ -141,8 +144,9 @@ def predict_video(video_path: str):
 
     fake_scores = []
     real_scores = []
+    frame_results = []
 
-    for frame in frame_dir.glob("*.jpg"):
+    for index, frame in enumerate(sorted(frame_dir.glob("*.jpg"), key=lambda item: int(item.stem.split("_")[-1]))):
 
         image = Image.open(frame).convert("RGB")
 
@@ -179,6 +183,17 @@ def predict_video(video_path: str):
 
             real_frames += 1
 
+        frame_confidence = max(fake_probability, real_probability)
+        frame_results.append({
+            "index": index,
+            "timestamp": round(index * 1.0, 2),
+            "prediction": "Fake" if prediction == 0 else "Real",
+            "confidence": round(frame_confidence, 2),
+            "real_probability": round(real_probability, 2),
+            "fake_probability": round(fake_probability, 2),
+            "thumbnail_url": f"/media/video_frames/{frame_dir.name}/{frame.name}",
+        })
+
     prediction = (
         "Fake"
         if fake_frames > real_frames
@@ -198,6 +213,7 @@ def predict_video(video_path: str):
         4,
     )
 
+    fake_ratio = fake_frames / total * 100
     return {
 
         "success": True,
@@ -243,5 +259,10 @@ def predict_video(video_path: str):
         "video_duration": round(
             duration,
             2,
+        ),
+        "frame_results": frame_results,
+        "summary": (
+            f"{fake_frames} of {total} sampled frames ({fake_ratio:.1f}%) were classified as fake. "
+            f"The overall video decision is {prediction} with {confidence:.1f}% frame agreement."
         ),
     }

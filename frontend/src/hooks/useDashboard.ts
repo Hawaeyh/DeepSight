@@ -5,6 +5,7 @@ import {
     getDetectionTrend,
     getPredictionDistribution,
     getRecentDetection,
+    getModelMetrics,
 } from "../services/dashboard.service";
 
 import type {
@@ -12,6 +13,7 @@ import type {
     DetectionTrend,
     PredictionDistribution,
     RecentDetection,
+    ModelMetric,
 } from "../types/dashboard";
 
 export function useDashboard() {
@@ -27,6 +29,9 @@ export function useDashboard() {
 
     const [recent, setRecent] =
         useState<RecentDetection[]>([]);
+
+    const [modelMetrics, setModelMetrics] =
+        useState<ModelMetric[]>([]);
 
     const [loading, setLoading] =
         useState(true);
@@ -52,6 +57,8 @@ export function useDashboard() {
 
                 recentData,
 
+                modelMetricsData,
+
             ] = await Promise.all([
 
                 getDashboardOverview(),
@@ -61,6 +68,8 @@ export function useDashboard() {
                 getPredictionDistribution(),
 
                 getRecentDetection(),
+
+                getModelMetrics(),
 
             ]);
 
@@ -76,6 +85,8 @@ export function useDashboard() {
             setDistribution(distributionData);
 
             setRecent(recentData);
+
+            setModelMetrics(modelMetricsData);
 
         }
 
@@ -126,6 +137,8 @@ export function useDashboard() {
         distribution,
 
         recent,
+
+        modelMetrics,
 
         loading,
 

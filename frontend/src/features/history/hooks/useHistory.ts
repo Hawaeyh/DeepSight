@@ -17,6 +17,7 @@ import {
     downloadHistoryReport,
 
     getHistory,
+    verifyHistory,
 
 } from "../services/history.service";
 
@@ -31,8 +32,11 @@ import type {
     HistoryItem,
 
 } from "../types/history";
+import { useSearchParams } from "react-router-dom";
 
 export function useHistory() {
+
+    const [searchParams] = useSearchParams();
 
     const [
 
@@ -64,7 +68,7 @@ export function useHistory() {
 
         setSearch,
 
-    ] = useState("");
+    ] = useState(searchParams.get("search") ?? "");
 
     const [
 
@@ -134,6 +138,12 @@ export function useHistory() {
 
         );
 
+    }
+
+    async function verify(id: number, verifiedResult: "Real" | "Fake") {
+        const updated = await verifyHistory(id, verifiedResult);
+        await loadHistory();
+        return updated;
     }
 
     const filtered = useMemo(() => {
@@ -219,6 +229,8 @@ export function useHistory() {
         remove,
 
         download,
+
+        verify,
 
     };
 

@@ -8,9 +8,9 @@ export default function DashboardHeader() {
 
             <SectionTitle
 
-                title="Dashboard"
+                title="Admin Analytics"
 
-                subtitle="AI-powered Deepfake Detection Platform"
+                subtitle="System-wide detection activity and model performance"
 
             />
 

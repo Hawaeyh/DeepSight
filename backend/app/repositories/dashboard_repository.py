@@ -216,3 +216,62 @@ class DashboardRepository:
             .limit(limit)
             .all()
         )
+
+    @staticmethod
+    def model_metrics(db: Session):
+        rows = (
+            db.query(
+                Analysis.model_name,
+                func.count(Analysis.id),
+                func.avg(Analysis.confidence),
+            )
+            .group_by(Analysis.model_name)
+            .all()
+        )
+        total = sum(row[1] for row in rows)
+        metrics = []
+
+        for model_name, usage_count, average_confidence in rows:
+            verified = (
+                db.query(Analysis)
+                .filter(
+                    Analysis.model_name == model_name,
+                    Analysis.verified_result.isnot(None),
+                )
+                .all()
+            )
+            correct = sum(item.prediction == item.verified_result for item in verified)
+            true_positive = sum(
+                item.prediction == "Fake" and item.verified_result == "Fake"
+                for item in verified
+            )
+            false_positive = sum(
+                item.prediction == "Fake" and item.verified_result != "Fake"
+                for item in verified
+            )
+            false_negative = sum(
+                item.prediction != "Fake" and item.verified_result == "Fake"
+                for item in verified
+            )
+            precision_denominator = true_positive + false_positive
+            recall_denominator = true_positive + false_negative
+            precision = true_positive / precision_denominator if precision_denominator else None
+            recall = true_positive / recall_denominator if recall_denominator else None
+            f1_score = (
+                2 * precision * recall / (precision + recall)
+                if precision is not None and recall is not None and precision + recall
+                else None
+            )
+            metrics.append({
+                "model": model_name,
+                "usageCount": usage_count,
+                "usagePercentage": round(usage_count / total * 100, 2) if total else 0,
+                "averageConfidence": round(average_confidence or 0, 2),
+                "verifiedSamples": len(verified),
+                "accuracy": round(correct / len(verified) * 100, 2) if verified else None,
+                "precision": round(precision * 100, 2) if precision is not None else None,
+                "recall": round(recall * 100, 2) if recall is not None else None,
+                "f1Score": round(f1_score * 100, 2) if f1_score is not None else None,
+            })
+
+        return metrics

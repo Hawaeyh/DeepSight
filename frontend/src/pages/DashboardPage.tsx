@@ -9,6 +9,8 @@ import RecentDetectionTable from "../components/dashboard/RecentDetectionTable";
 import AIStatusCard from "../components/dashboard/AIStatusCard";
 import CurrentModelCard from "../components/dashboard/CurrentModelCard";
 import SystemStatusCard from "../components/dashboard/SystemStatusCard";
+import ModelPerformanceCard from "../components/dashboard/ModelPerformanceCard";
+import AdminDashboardInsights from "../components/dashboard/AdminDashboardInsights";
 
 import Spinner from "../components/ui/Spinner";
 import EmptyState from "../components/ui/EmptyState";
@@ -26,6 +28,8 @@ export default function DashboardPage() {
         distribution,
 
         recent,
+
+        modelMetrics,
 
         loading,
 
@@ -164,6 +168,10 @@ export default function DashboardPage() {
                 <SystemStatusCard />
 
             </div>
+
+            <ModelPerformanceCard data={modelMetrics} />
+
+            <AdminDashboardInsights models={modelMetrics} />
 
         </div>
 

@@ -4,6 +4,8 @@ from fastapi import (
     APIRouter,
     Depends,
     File,
+    Form,
+    Header,
     HTTPException,
     UploadFile,
 )
@@ -11,11 +13,14 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from app.ai.models.model_loader import ModelUnavailableError
 from app.repositories.analysis_repository import AnalysisRepository
 from app.schemas.analysis import AnalysisResponse
 from app.services.ai_service import AIService
 from app.services.analysis_service import AnalysisService
 from app.services.file_service import save_uploaded_image
+from app.services.firebase_service import FirebaseService
+from app.services.subscription_service import SubscriptionService
 
 router = APIRouter(
     prefix="/analysis",
@@ -30,14 +35,32 @@ router = APIRouter(
 )
 async def analyze_image(
     file: UploadFile = File(...),
+    model: str = Form("efficientnet"),
+    authorization: str | None = Header(None),
+    x_guest_id: str | None = Header(None),
+    x_deepsight_client: str | None = Header(None),
     db: Session = Depends(get_db),
 ):
 
+    SubscriptionService.consume(
+        db,
+        authorization,
+        x_guest_id,
+        "image",
+        x_deepsight_client or "web",
+    )
+
     saved_path = save_uploaded_image(file)
 
-    result = AIService.analyze_image(
-        str(saved_path)
-    )
+    try:
+        result = AIService.analyze_image(
+            str(saved_path),
+            model,
+        )
+    except ValueError as error:
+        raise HTTPException(status_code=422, detail=str(error)) from error
+    except ModelUnavailableError as error:
+        raise HTTPException(status_code=503, detail=str(error)) from error
 
     if not result["success"]:
 
@@ -162,6 +185,8 @@ def delete_analysis(
             status_code=404,
             detail="Analysis not found.",
         )
+
+    FirebaseService.delete_analysis(analysis_id)
 
     return {
 

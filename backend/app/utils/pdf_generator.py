@@ -27,7 +27,7 @@ def generate_report(analysis):
 
     story.append(
         Paragraph(
-            "<b>ML7-VIDS DeepSight Report</b>",
+            "<b>DeepSight System Detection Report</b>",
             styles["Title"],
         )
     )
@@ -59,6 +59,30 @@ def generate_report(analysis):
             styles["Normal"],
         )
     )
+
+    if analysis.deepfake_type:
+        story.append(
+            Paragraph(
+                f"Multiclass Label : {analysis.deepfake_type}",
+                styles["Normal"],
+            )
+        )
+
+    if analysis.type_confidence is not None:
+        story.append(
+            Paragraph(
+                f"Manipulation Type Confidence : {analysis.type_confidence:.2f} %",
+                styles["Normal"],
+            )
+        )
+
+    if analysis.verified_result:
+        story.append(
+            Paragraph(
+                f"Human Verified Result : {analysis.verified_result}",
+                styles["Normal"],
+            )
+        )
 
     story.append(
         Paragraph(

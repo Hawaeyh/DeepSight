@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
     analyzeImage,
     downloadReport,
+    getDetectionModels,
 } from "../services/image.service";
 
 import { validateImage } from "../utils/fileValidation";
@@ -10,15 +11,29 @@ import { validateImage } from "../utils/fileValidation";
 import { getRecentDetection } from "../../../services/dashboard.service";
 
 import { downloadFile } from "../utils/downloadFile";
+import { getImageMetadata } from "../utils/imageMetadata";
 
 import type { ImageDetectionResponse } from "../types/image";
+import type { ImageMetadata } from "../types/metadata";
 import type { RecentDetection } from "../../../types/dashboard";
+import type { DetectionModel, ModelKey } from "../../../types/model";
+import { getApiErrorMessage } from "../../../utils/apiError";
 
 export function useImageDetection() {
+
+    const storedModel = localStorage.getItem("deepsight-default-model") as ModelKey | null;
+
+    const [selectedModel, setSelectedModelState] = useState<ModelKey>(
+        storedModel ?? "efficientnet",
+    );
+
+    const [models, setModels] = useState<DetectionModel[]>([]);
 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
     const [preview, setPreview] = useState<string | null>(null);
+
+    const [metadata, setMetadata] = useState<ImageMetadata | null>(null);
 
     const [result, setResult] =
         useState<ImageDetectionResponse | null>(null);
@@ -54,7 +69,26 @@ export function useImageDetection() {
 
         loadRecent();
 
-    }, [loadRecent]);
+        getDetectionModels()
+            .then(({ models: availableModels }) => {
+                setModels(availableModels);
+                const current = availableModels.find(item => item.key === selectedModel);
+                if (!current?.available) {
+                    const fallback = availableModels.find(item => item.available);
+                    if (fallback) {
+                        setSelectedModelState(fallback.key);
+                    }
+                }
+            })
+            .catch(() => setError("Unable to load the model catalog."));
+
+    }, [loadRecent, selectedModel]);
+
+    function setSelectedModel(model: ModelKey) {
+        setSelectedModelState(model);
+        localStorage.setItem("deepsight-default-model", model);
+        setResult(null);
+    }
 
     useEffect(() => {
 
@@ -70,7 +104,7 @@ export function useImageDetection() {
 
     }, [preview]);
 
-    function selectImage(file: File) {
+    async function selectImage(file: File) {
 
         const validation = validateImage(file);
 
@@ -96,7 +130,16 @@ export function useImageDetection() {
 
         setResult(null);
 
+        setMetadata(null);
+
         setError(null);
+
+        try {
+            setMetadata(await getImageMetadata(file));
+        }
+        catch {
+            setError("Unable to read image metadata.");
+        }
 
     }
 
@@ -116,14 +159,7 @@ export function useImageDetection() {
 
             setError(null);
 
-            const response = await analyzeImage(selectedFile);
-
-            console.log("IMAGE RESPONSE");
-            console.dir(response, { depth: null });
-
-            console.log("Prediction:", response.prediction);
-            console.log("Model:", response.model);
-            console.log("Confidence:", response.prediction?.confidence);
+            const response = await analyzeImage(selectedFile, selectedModel);
 
             setResult(response);
 
@@ -135,7 +171,7 @@ export function useImageDetection() {
 
             console.error(error);
 
-            setError("Image analysis failed.");
+            setError(getApiErrorMessage(error, "Image analysis failed."));
 
         }
 
@@ -192,6 +228,8 @@ export function useImageDetection() {
 
         setResult(null);
 
+        setMetadata(null);
+
         setError(null);
 
     }
@@ -208,6 +246,12 @@ export function useImageDetection() {
 
         preview,
 
+        metadata,
+
+        models,
+
+        selectedModel,
+
         result,
 
         recent,
@@ -219,6 +263,8 @@ export function useImageDetection() {
         hasResult: result !== null,
 
         selectImage,
+
+        setSelectedModel,
 
         detectImage,
 

@@ -1,5 +1,8 @@
-from fastapi import APIRouter
+from typing import Literal
+
+from fastapi import APIRouter, HTTPException
 from fastapi import Depends
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -12,6 +15,11 @@ router = APIRouter(
     prefix="/history",
     tags=["History"],
 )
+
+
+class VerificationRequest(BaseModel):
+    verified_result: Literal["Real", "Fake"]
+    remarks: str | None = None
 
 
 @router.get("")
@@ -48,3 +56,20 @@ def delete(
     return {
         "message": "Deleted successfully."
     }
+
+
+@router.patch("/{analysis_id}/verify")
+def verify(
+    analysis_id: int,
+    request: VerificationRequest,
+    db: Session = Depends(get_db),
+):
+    analysis = HistoryService.verify(
+        db,
+        analysis_id,
+        request.verified_result,
+        request.remarks,
+    )
+    if analysis is None:
+        raise HTTPException(status_code=404, detail="Analysis not found.")
+    return analysis

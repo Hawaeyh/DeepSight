@@ -151,7 +151,7 @@ export default function ModelCard({
                     <InfoRow
                         icon={<Database size={18}/>}
                         label="Dataset"
-                        value="DeepSight Binary V3"
+                        value={`${result.model_name} ${result.model_version}`}
                     />
 
                     <InfoRow

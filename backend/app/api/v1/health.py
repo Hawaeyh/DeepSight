@@ -7,6 +7,6 @@ router = APIRouter(tags=["Health"])
 def health():
     return {
         "status": "online",
-        "system": "ML7-VIDS DeepSight API",
+        "system": "DeepSight System API",
         "version": "1.0.0"
     }

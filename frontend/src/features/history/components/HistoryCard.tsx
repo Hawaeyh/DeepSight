@@ -1,6 +1,5 @@
 import {
 
-    BrainCircuit,
     Clock3,
     Download,
     Eye,

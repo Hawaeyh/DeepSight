@@ -1,6 +1,6 @@
-# ML7-VIDS DeepSight System
+# DeepSight System
 
-AI-Powered Digital Media Forensics Platform
+Machine Learning-Driven Deepfake Image Detection System
 
 ## Features
 

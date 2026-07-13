@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models.analysis import Analysis
 from app.repositories.analysis_repository import AnalysisRepository
+from app.services.firebase_service import FirebaseService
 
 
 class AnalysisService:
@@ -94,7 +95,11 @@ class AnalysisService:
             status=status,
         )
 
-        return AnalysisRepository.create(
+        saved_analysis = AnalysisRepository.create(
             db,
             analysis,
         )
+
+        FirebaseService.save_analysis(saved_analysis)
+
+        return saved_analysis

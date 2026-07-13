@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 
 import type { ImageDetectionResponse } from "../types/image";
+import { getManipulationInfo } from "../utils/manipulation";
 
 interface Props {
     result: ImageDetectionResponse | null;
@@ -138,6 +139,10 @@ export default function PredictionResultCard({
         result.real_probability -
         result.fake_probability
     );
+
+    const manipulation = isFake
+        ? getManipulationInfo(result.deepfake_type)
+        : null;
 
     return (
 
@@ -292,6 +297,14 @@ export default function PredictionResultCard({
                         icon={<ShieldCheck size={18}/>}
                     />
 
+                    {manipulation && <InfoRow label="Fake Category" value={manipulation.category} icon={<ShieldAlert size={18}/>} />}
+
+                    {manipulation && <InfoRow label="Manipulation" value={manipulation.technique} icon={<Activity size={18}/>} />}
+
+                    {manipulation?.modelClass && <InfoRow label="Multiclass Label" value={manipulation.modelClass} icon={<BrainCircuit size={18}/>} />}
+
+                    {manipulation && result.type_confidence !== null && <InfoRow label="Type Confidence" value={`${result.type_confidence.toFixed(2)}%`} icon={<Activity size={18}/>} />}
+
                     <InfoRow
                         label="Model"
                         value={result.model_name}
@@ -341,6 +354,13 @@ export default function PredictionResultCard({
                         }
 
                     </p>
+
+                    {manipulation && (
+                        <div className="mt-4 rounded-lg bg-slate-800 p-4">
+                            <div className="font-semibold text-cyan-300">{manipulation.technique}</div>
+                            <p className="mt-2 text-sm leading-6 text-slate-300">{manipulation.description}</p>
+                        </div>
+                    )}
 
                 </div>
 

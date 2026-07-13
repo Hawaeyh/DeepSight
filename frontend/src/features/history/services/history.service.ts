@@ -69,3 +69,13 @@ export async function downloadHistoryReport(
     return data;
 
 }
+
+export async function verifyHistory(
+    id: number,
+    verifiedResult: "Real" | "Fake",
+): Promise<HistoryItem> {
+    const { data } = await api.patch(`/history/${id}/verify`, {
+        verified_result: verifiedResult,
+    });
+    return data;
+}

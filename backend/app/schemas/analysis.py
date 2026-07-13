@@ -167,6 +167,21 @@ class VideoDetectionResponse(BaseModel):
     video: VideoInformationSchema
 
 
+class VideoFrameResult(BaseModel):
+    index: int
+    timestamp: float
+    prediction: str
+    confidence: float
+    real_probability: float
+    fake_probability: float
+    thumbnail_url: str
+
+
+class VideoAnalysisResponse(AnalysisResponse):
+    frame_results: list[VideoFrameResult]
+    summary: str
+
+
 # ==========================================================
 # DASHBOARD
 # ==========================================================

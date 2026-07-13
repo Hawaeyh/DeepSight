@@ -12,6 +12,8 @@ import AIInformationCard from "../components/AIInformationCard";
 import RecommendationCard from "../components/RecommendationCard";
 import ModelCard from "../components/ModelCard";
 import ProbabilityCard from "../components/ProbabilityCard";
+import ModelSelector from "../components/ModelSelector";
+import FeedbackPanel from "../components/FeedbackPanel";
 
 import EmptyState from "../../../components/ui/EmptyState";
 import Spinner from "../../../components/ui/Spinner";
@@ -30,12 +32,15 @@ export default function ImageDetectionPage() {
         selectedFile,
         preview,
         metadata,
+        models,
+        selectedModel,
         result,
         recent,
         loading,
         error,
 
         selectImage,
+        setSelectedModel,
         detectImage,
         handleDownloadReport,
         reset,
@@ -74,7 +79,7 @@ export default function ImageDetectionPage() {
 
                 <p className="mt-2 text-slate-400">
 
-                    Upload an image to detect whether it is authentic or AI generated using the DeepSight AI Engine.
+                    Upload an image to detect authentic, manipulated, or deepfake facial content using the DeepSight AI Engine.
 
                 </p>
 
@@ -110,6 +115,13 @@ export default function ImageDetectionPage() {
 
             />
 
+            <ModelSelector
+                models={models}
+                selected={selectedModel}
+                disabled={loading}
+                onChange={setSelectedModel}
+            />
+
             {/* ======================================== */}
             {/* Hero Result */}
             {/* ======================================== */}
@@ -123,6 +135,8 @@ export default function ImageDetectionPage() {
                 />
 
             )}
+
+            {result && <FeedbackPanel result={result} />}
 
             {/* ======================================== */}
             {/* Preview + Pipeline */}

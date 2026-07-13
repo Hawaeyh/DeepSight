@@ -1,10 +1,10 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserRegister(BaseModel):
     full_name: str
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8, max_length=72)
 
 
 class UserLogin(BaseModel):
@@ -12,11 +12,16 @@ class UserLogin(BaseModel):
     password: str
 
 
+class GoogleLogin(BaseModel):
+    credential: str
+
+
 class UserResponse(BaseModel):
     id: int
     full_name: str
     email: EmailStr
     role: str
+    plan: str = "starter"
 
     class Config:
         from_attributes = True

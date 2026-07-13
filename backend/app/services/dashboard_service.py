@@ -127,3 +127,7 @@ class DashboardService:
             for item in analyses
 
         ]
+
+    @staticmethod
+    def models(db: Session):
+        return DashboardRepository.model_metrics(db)

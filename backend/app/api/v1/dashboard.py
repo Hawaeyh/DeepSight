@@ -36,3 +36,8 @@ def recent(
     db: Session = Depends(get_db),
 ):
     return DashboardService.recent(db)
+
+
+@router.get("/models")
+def models(db: Session = Depends(get_db)):
+    return DashboardService.models(db)

@@ -47,3 +47,8 @@ export async function getRecentDetection() {
     return response.data;
 
 }
+
+export async function getModelMetrics() {
+    const response = await api.get("/dashboard/models");
+    return response.data;
+}

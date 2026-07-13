@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi import Depends
 from fastapi.responses import FileResponse
 
@@ -31,6 +31,12 @@ def report(
         db,
         analysis_id,
     )
+
+    if analysis is None:
+        raise HTTPException(
+            status_code=404,
+            detail="Analysis not found.",
+        )
 
     pdf = ReportService.create(
         analysis

@@ -2,7 +2,7 @@ import Card from "../../../components/ui/Card";
 import StatusBadge from "../../../components/ui/StatusBadge";
 import Metric from "../../../components/ui/Metric";
 
-import type { ImageDetectionResponse } from "../../../types/image";
+import type { ImageDetectionResponse } from "../types/image";
 
 interface Props {
 
@@ -56,17 +56,17 @@ export default function SummaryCard({
 
                     <h2 className="text-3xl font-bold">
 
-                        {result.prediction.label}
+                        {result.prediction}
 
                     </h2>
 
                     <StatusBadge
 
-                        text={result.prediction.riskLevel}
+                        text={result.risk_level}
 
                         color={
 
-                            result.prediction.riskLevel === "High"
+                            result.risk_level === "High"
 
                                 ? "red"
 
@@ -82,7 +82,7 @@ export default function SummaryCard({
 
                     label="Confidence"
 
-                    value={`${result.prediction.confidence.toFixed(2)} %`}
+                    value={`${result.confidence.toFixed(2)} %`}
 
                 />
 
@@ -90,7 +90,7 @@ export default function SummaryCard({
 
                     label="Deepfake Type"
 
-                    value={result.deepfake.type}
+                    value={result.deepfake_type ?? "Authentic"}
 
                 />
 
@@ -98,7 +98,7 @@ export default function SummaryCard({
 
                     label="Analysis ID"
 
-                    value={result.analysisId}
+                    value={result.id}
 
                 />
 

@@ -42,6 +42,8 @@ export default function HistoryPage() {
 
         download,
 
+        verify,
+
     } = useHistory();
 
     const [
@@ -316,6 +318,13 @@ export default function HistoryPage() {
 
                     }
 
+                }}
+
+                onVerify={async verifiedResult => {
+                    if (selected) {
+                        const updated = await verify(selected.id, verifiedResult);
+                        setSelected(updated);
+                    }
                 }}
 
             />

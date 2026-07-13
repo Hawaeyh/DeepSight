@@ -16,6 +16,22 @@ const api = axios.create({
 
 });
 
+function getGuestId() {
+    let guestId = localStorage.getItem("deepsight-guest-id");
+    if (!guestId) {
+        guestId = crypto.randomUUID();
+        localStorage.setItem("deepsight-guest-id", guestId);
+    }
+    return guestId;
+}
+
+api.interceptors.request.use(config => {
+    const token = localStorage.getItem("deepsight-access-token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    config.headers["X-Guest-ID"] = getGuestId();
+    return config;
+});
+
 api.interceptors.response.use(
 
     response => response,

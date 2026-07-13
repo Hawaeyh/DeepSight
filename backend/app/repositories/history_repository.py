@@ -41,3 +41,13 @@ class HistoryRepository:
             db.commit()
 
         return analysis
+
+    @staticmethod
+    def verify(db: Session, analysis_id: int, verified_result: str, remarks: str | None = None):
+        analysis = db.query(Analysis).filter(Analysis.id == analysis_id).first()
+        if analysis:
+            analysis.verified_result = verified_result
+            analysis.remarks = remarks
+            db.commit()
+            db.refresh(analysis)
+        return analysis

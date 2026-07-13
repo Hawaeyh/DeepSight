@@ -6,10 +6,10 @@ from torchvision import transforms
 
 from app.ai.face.face_cropper import extract_face
 from app.ai.models.model_loader import (
-    binary_model,
-    multiclass_model,
     CLASS_NAMES,
     DEVICE,
+    get_binary_model,
+    get_multiclass_model,
 )
 
 transform = transforms.Compose([
@@ -22,9 +22,11 @@ transform = transforms.Compose([
 ])
 
 
-def predict(image_path: str):
+def predict(image_path: str, model_key: str = "efficientnet"):
 
     start = time.time()
+
+    binary_model, model_spec = get_binary_model(model_key)
 
     original = Image.open(image_path).convert("RGB")
 
@@ -56,9 +58,9 @@ def predict(image_path: str):
 
             "processing_time": round(time.time() - start, 4),
 
-            "model_name": "EfficientNet-B0",
+            "model_name": model_spec["name"],
 
-            "model_version": "Binary V3",
+            "model_version": model_spec["version"],
 
             "device": str(DEVICE),
 
@@ -118,6 +120,8 @@ def predict(image_path: str):
 
         if prediction_index == 0:
 
+            multiclass_model = get_multiclass_model()
+
             multiclass_output = multiclass_model(
                 tensor
             )
@@ -168,9 +172,9 @@ def predict(image_path: str):
 
             "processing_time": processing_time,
 
-            "model_name": "EfficientNet-B0",
+            "model_name": model_spec["name"],
 
-            "model_version": "Binary V3",
+            "model_version": model_spec["version"],
 
             "device": str(DEVICE),
 

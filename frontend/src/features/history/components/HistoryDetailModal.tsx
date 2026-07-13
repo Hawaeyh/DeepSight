@@ -24,6 +24,8 @@ interface Props {
 
     onDownload: () => void;
 
+    onVerify: (result: "Real" | "Fake") => void;
+
 }
 
 interface RowProps {
@@ -73,6 +75,8 @@ export default function HistoryDetailModal({
     onClose,
 
     onDownload,
+
+    onVerify,
 
 }: Props) {
 
@@ -344,7 +348,18 @@ export default function HistoryDetailModal({
 
                     </div>
 
-                    <div className="flex justify-end gap-4 mt-10">
+                    <div className="mt-10 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                        <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div><div className="font-semibold">Human Verification</div><div className="mt-1 text-sm text-slate-400">Ground truth improves the dashboard accuracy metric.</div></div>
+                            <div className="flex gap-3">
+                                <Button variant="secondary" onClick={() => onVerify("Real")}>Mark Real</Button>
+                                <Button variant="danger" onClick={() => onVerify("Fake")}>Mark Fake</Button>
+                            </div>
+                        </div>
+                        {item.verified_result && <p className="mt-3 text-sm text-cyan-300">Verified as {item.verified_result}</p>}
+                    </div>
+
+                    <div className="flex justify-end gap-4 mt-6">
 
                         <Button
 

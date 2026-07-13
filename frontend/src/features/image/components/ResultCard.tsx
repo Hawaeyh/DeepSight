@@ -52,7 +52,7 @@ export default function ResultCard({
 
                     <h2 className="text-4xl font-bold">
 
-                        {result.prediction.label}
+                        {result.prediction}
 
                     </h2>
 
@@ -68,7 +68,7 @@ export default function ResultCard({
 
                     <h3 className="text-2xl">
 
-                        {result.prediction.confidence.toFixed(2)}%
+                        {result.confidence.toFixed(2)}%
 
                     </h3>
 
@@ -85,14 +85,14 @@ export default function ResultCard({
                     <span
 
                         className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                            result.prediction.riskLevel === "High"
+                            result.risk_level === "High"
                                 ? "bg-red-500/20 text-red-400"
                                 : "bg-green-500/20 text-green-400"
                         }`}
 
                     >
 
-                        {result.prediction.riskLevel}
+                        {result.risk_level}
 
                     </span>
 
@@ -108,7 +108,7 @@ export default function ResultCard({
 
                     <h3>
 
-                        {result.deepfake.type ?? "Authentic"}
+                        {result.deepfake_type ?? "Authentic"}
 
                     </h3>
 

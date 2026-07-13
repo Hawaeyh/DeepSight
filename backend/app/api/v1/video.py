@@ -5,16 +5,18 @@ from fastapi import (
     Depends,
     File,
     HTTPException,
+    Header,
     UploadFile,
 )
 
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.analysis import AnalysisResponse
+from app.schemas.analysis import AnalysisResponse, VideoAnalysisResponse
 from app.services.analysis_service import AnalysisService
 from app.services.file_service import save_uploaded_video
 from app.services.video_service import VideoService
+from app.services.subscription_service import SubscriptionService
 
 router = APIRouter(
     prefix="/video",
@@ -24,13 +26,17 @@ router = APIRouter(
 
 @router.post(
     "/analyze",
-    response_model=AnalysisResponse,
+    response_model=VideoAnalysisResponse,
     status_code=201,
 )
 async def analyze_video(
     file: UploadFile = File(...),
+    authorization: str | None = Header(None),
+    x_guest_id: str | None = Header(None),
     db: Session = Depends(get_db),
 ):
+
+    SubscriptionService.consume(db, authorization, x_guest_id, "video")
 
     saved_path = save_uploaded_video(file)
 
@@ -104,4 +110,7 @@ async def analyze_video(
 
     )
 
-    return analysis
+    response = AnalysisResponse.model_validate(analysis).model_dump()
+    response["frame_results"] = result["frame_results"]
+    response["summary"] = result["summary"]
+    return response
