@@ -6,6 +6,8 @@ import {
 
     useMemo,
 
+    useRef,
+
     useState,
 
 } from "react";
@@ -33,8 +35,13 @@ import type {
 
 } from "../types/history";
 import { useSearchParams } from "react-router-dom";
+import { useAuth } from "../../../hooks/useAuth";
 
 export function useHistory() {
+
+    const { authStatus } = useAuth();
+    const authStatusRef = useRef(authStatus);
+    authStatusRef.current = authStatus;
 
     const [searchParams] = useSearchParams();
 
@@ -82,6 +89,12 @@ export function useHistory() {
 
     const loadHistory = useCallback(async () => {
 
+        if (authStatus !== "authenticated") {
+            setHistory([]);
+            setLoading(authStatus === "loading");
+            return;
+        }
+
         try {
 
             setLoading(true);
@@ -89,6 +102,8 @@ export function useHistory() {
             setError(null);
 
             const response = await getHistory();
+
+            if (authStatusRef.current !== "authenticated") return;
 
             setHistory(response);
 
@@ -110,13 +125,14 @@ export function useHistory() {
 
         }
 
-    }, []);
+    }, [authStatus]);
 
     useEffect(() => {
 
-        loadHistory();
+        if (authStatus === "authenticated") loadHistory();
+        else { setHistory([]); setLoading(authStatus === "loading"); setError(null); }
 
-    }, [loadHistory]);
+    }, [authStatus, loadHistory]);
 
     async function remove(id: number) {
 

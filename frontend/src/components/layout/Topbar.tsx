@@ -4,24 +4,28 @@ import { useNavigate } from "react-router-dom";
 
 import api from "../../services/api";
 import type { Analysis } from "../../types/analysis";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
     const navigate = useNavigate();
-    const { user, logout } = useAuth();
+    const { user, authStatus, logout } = useAuth();
     const [analyses, setAnalyses] = useState<Analysis[]>([]);
+    const [notifications, setNotifications] = useState<Array<{id:number; title:string; message:string; isRead:boolean; createdAt:string}>>([]);
     const [query, setQuery] = useState("");
     const [searchOpen, setSearchOpen] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [profileOpen, setProfileOpen] = useState(false);
-    const [lastReadId, setLastReadId] = useState(() => Number(localStorage.getItem("deepsight-notifications-read") ?? 0));
 
     useEffect(() => {
-        const load = () => api.get<Analysis[]>("/history").then(response => setAnalyses(response.data)).catch(() => undefined);
+        if (authStatus !== "authenticated") {
+            setAnalyses([]); setNotifications([]);
+            return;
+        }
+        const load = () => Promise.all([api.get<Analysis[]>("/history"), api.get<Array<{id:number; title:string; message:string; isRead:boolean; createdAt:string}>>("/notifications")]).then(([history, alerts]) => { setAnalyses(history.data); setNotifications(alerts.data); }).catch(() => undefined);
         load();
         const timer = window.setInterval(load, 30000);
         return () => window.clearInterval(timer);
-    }, []);
+    }, [authStatus]);
 
     const results = useMemo(() => {
         const normalized = query.trim().toLowerCase();
@@ -33,7 +37,7 @@ export default function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
         ).slice(0, 6);
     }, [analyses, query]);
 
-    const unread = analyses.filter(item => item.id > lastReadId).length;
+    const unread = notifications.filter(item => !item.isRead).length;
     const profile = JSON.parse(localStorage.getItem("deepsight-profile") ?? "{}") as { fullName?: string; email?: string };
     const displayName = user?.full_name ?? profile.fullName ?? "Guest User";
     const displayEmail = user?.email ?? profile.email ?? "2 free detections daily";
@@ -42,9 +46,9 @@ export default function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
         setNotificationsOpen(value => !value);
         setSearchOpen(false);
         setProfileOpen(false);
-        const newestId = analyses[0]?.id ?? 0;
-        setLastReadId(newestId);
-        localStorage.setItem("deepsight-notifications-read", String(newestId));
+        if (!notificationsOpen && unread) {
+            void api.post("/notifications/read-all").then(() => setNotifications(items => items.map(item => ({ ...item, isRead: true }))));
+        }
     }
 
     function openHistory(item: Analysis) {
@@ -98,15 +102,15 @@ export default function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
 
             {notificationsOpen && (
                 <div className="absolute right-4 top-[calc(100%+8px)] w-[min(92vw,380px)] rounded-lg border border-slate-700 bg-slate-900 p-3 shadow-2xl">
-                    <div className="px-2 py-2 font-semibold">Recent detections</div>
+                    <div className="px-2 py-2 font-semibold">Notifications</div>
                     <div className="max-h-80 overflow-y-auto">
-                        {analyses.slice(0, 6).map(item => (
-                            <button key={item.id} type="button" onClick={() => openHistory(item)} className="flex w-full gap-3 rounded-lg p-3 text-left hover:bg-slate-800">
-                                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${item.prediction === "Fake" ? "bg-red-400" : "bg-green-400"}`} />
-                                <span className="min-w-0"><span className="block truncate font-medium">{item.filename}</span><span className="text-xs text-slate-400">Detected as {item.prediction} · {new Date(item.created_at).toLocaleString()}</span></span>
-                            </button>
+                        {notifications.slice(0, 8).map(item => (
+                            <div key={item.id} className="flex w-full gap-3 rounded-lg p-3 text-left">
+                                <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${item.isRead ? "bg-slate-600" : "bg-cyan-400"}`} />
+                                <span className="min-w-0"><span className="block truncate font-medium">{item.title}</span><span className="text-xs text-slate-400">{item.message} · {new Date(item.createdAt).toLocaleString()}</span></span>
+                            </div>
                         ))}
-                        {analyses.length === 0 && <p className="p-4 text-sm text-slate-500">No detections yet.</p>}
+                        {notifications.length === 0 && <p className="p-4 text-sm text-slate-500">No notifications yet.</p>}
                     </div>
                 </div>
             )}

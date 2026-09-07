@@ -191,7 +191,7 @@ def predict_video(video_path: str):
             "confidence": round(frame_confidence, 2),
             "real_probability": round(real_probability, 2),
             "fake_probability": round(fake_probability, 2),
-            "thumbnail_url": f"/media/video_frames/{frame_dir.name}/{frame.name}",
+            "thumbnail_url": "",
         })
 
     prediction = (

@@ -4,20 +4,21 @@ import { Link } from "react-router-dom";
 import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import api from "../../services/api";
-import type { AdminUsageAnalytics } from "../../types/admin";
+import type { AdminSystemOverview, AdminUsageAnalytics } from "../../types/admin";
 import type { ModelMetric } from "../../types/dashboard";
 
 export default function AdminDashboardInsights({ models }: { models: ModelMetric[] }) {
     const [usage, setUsage] = useState<AdminUsageAnalytics | null>(null);
+    const [overview, setOverview] = useState<AdminSystemOverview | null>(null);
 
     useEffect(() => {
-        api.get<AdminUsageAnalytics>("/admin/usage")
-            .then(response => setUsage(response.data))
+        Promise.all([api.get<AdminUsageAnalytics>("/admin/usage"), api.get<AdminSystemOverview>("/admin/overview")])
+            .then(([usageResponse, overviewResponse]) => { setUsage(usageResponse.data); setOverview(overviewResponse.data); })
             .catch(() => undefined);
     }, []);
 
     return (
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div className="space-y-6"><section className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">{[["Users",overview?.totalUsers],["Analyses",overview?.totalAnalyses],["Today",overview?.analysesToday],["Subscriptions",overview?.activeSubscriptions],["Video queue",overview?.videoQueue],["Failed jobs",overview?.failedVideoJobs]].map(([label,value]) => <div key={String(label)} className="rounded-lg border border-slate-800 bg-slate-900 p-4"><div className="text-xs text-slate-400">{label}</div><div className="mt-2 text-2xl font-bold">{value ?? "Unavailable"}</div></div>)}</section><div className="grid gap-6 xl:grid-cols-2">
             <section className="rounded-lg border border-slate-800 bg-slate-900 p-5">
                 <div className="mb-5 flex items-center justify-between gap-3">
                     <div><h2 className="font-semibold">Model comparison</h2><p className="mt-1 text-sm text-slate-400">Confidence and verified performance</p></div>
@@ -64,6 +65,6 @@ export default function AdminDashboardInsights({ models }: { models: ModelMetric
                     </ResponsiveContainer>
                 </div>
             </section>
-        </div>
+        </div></div>
     );
 }

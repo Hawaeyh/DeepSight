@@ -27,6 +27,7 @@ class FeedbackService:
         corrected_prediction: str | None,
         fake_category: str | None,
         manipulation_type: str | None,
+        owner_user_id: int,
     ) -> AnalysisFeedback:
         verified_result = analysis.prediction if is_correct else corrected_prediction
         analysis.verified_result = verified_result
@@ -70,6 +71,7 @@ class FeedbackService:
             original_file_path=analysis.file_path,
             hard_example_path=hard_example_path,
             status="queued_for_retraining" if not is_correct else "verified",
+            owner_user_id=owner_user_id,
         )
         db.add(feedback)
         db.commit()

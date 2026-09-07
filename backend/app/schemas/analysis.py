@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, computed_field
 
 # ==========================================================
 # DATABASE ANALYSIS MODEL
@@ -11,9 +11,15 @@ from pydantic import BaseModel, ConfigDict
 class AnalysisBase(BaseModel):
 
     filename: str
-    file_path: str
-
     file_type: str
+    source: Optional[str] = None
+    quality_metadata: Optional[dict] = None
+    quality_warnings: Optional[list[str]] = None
+    selected_face_index: Optional[int] = None
+    selected_face_box: Optional[list[int]] = None
+    face_detection_confidence: Optional[float] = None
+    result: Optional[str] = None
+    display_label: Optional[str] = None
     file_extension: Optional[str] = None
     file_size: Optional[float] = None
 
@@ -65,6 +71,36 @@ class AnalysisResponse(AnalysisBase):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+    @computed_field
+    @property
+    def binary_prediction(self) -> str:
+        return self.prediction
+
+    @computed_field
+    @property
+    def binary_probability(self) -> float:
+        return self.confidence
+
+    @computed_field
+    @property
+    def manipulation_type(self) -> Optional[str]:
+        return self.deepfake_type
+
+    @computed_field
+    @property
+    def processing_time_ms(self) -> float:
+        return round(self.processing_time * 1000, 2)
+
+    @computed_field
+    @property
+    def binary_model_id(self) -> str:
+        return f"{self.model_name}:{self.model_version}"
+
+    @computed_field
+    @property
+    def multiclass_model_id(self) -> Optional[str]:
+        return f"multiclass:{self.model_version}" if self.deepfake_type else None
 
 
 # ==========================================================

@@ -19,6 +19,9 @@ export interface Plan {
     limit: number | null;
     windowHours: number | null;
     features: string[];
+    monthlyPrice?: number;
+    annualPrice?: number;
+    billingAvailable?: { monthly: boolean; annual: boolean };
 }
 
 export interface UsageStatus {
@@ -27,4 +30,9 @@ export interface UsageStatus {
     used: number;
     remaining: number | null;
     resetsAt: string | null;
+    subscriptionStatus?: string | null;
+    provider?: string | null;
+    cancelAtPeriodEnd?: boolean;
+    currentPeriodEnd?: string | null;
+    hasBillingCustomer?: boolean;
 }

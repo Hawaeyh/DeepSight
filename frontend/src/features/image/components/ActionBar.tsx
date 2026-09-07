@@ -7,6 +7,7 @@ interface Props {
     disabled: boolean;
 
     canDownload: boolean;
+    completed: boolean;
 
     onAnalyze(): void;
 
@@ -15,6 +16,7 @@ interface Props {
     onReset(): void;
 
     onHistory(): void;
+    onFeedback(): void;
 
 }
 
@@ -25,6 +27,7 @@ export default function ActionBar({
     disabled,
 
     canDownload,
+    completed,
 
     onAnalyze,
 
@@ -33,6 +36,7 @@ export default function ActionBar({
     onReset,
 
     onHistory,
+    onFeedback,
 
 }: Props) {
 
@@ -48,7 +52,7 @@ export default function ActionBar({
             "
         >
 
-            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 xl:grid-cols-5 gap-4">
 
                 <Button
 
@@ -62,13 +66,15 @@ export default function ActionBar({
 
                         loading
 
-                            ? "Analyzing..."
+                            ? "Analysing..."
 
-                            : "Analyze Image"
+                            : "Analyse Image"
 
                     }
 
                 </Button>
+
+                <Button variant="secondary" onClick={onFeedback} disabled={!canDownload}>Submit Feedback</Button>
 
                 <Button
 
@@ -104,7 +110,7 @@ export default function ActionBar({
 
                 >
 
-                    Reset
+                    {completed ? "Analyse Another Image" : "Choose Another Image"}
 
                 </Button>
 

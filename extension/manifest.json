@@ -3,8 +3,8 @@
   "name": "DeepSight Detection",
   "version": "1.0.0",
   "description": "Detect real and fake images on webpages with DeepSight System.",
-  "permissions": ["activeTab", "storage", "tabs"],
-  "host_permissions": ["<all_urls>", "http://127.0.0.1:8000/*", "http://localhost:8000/*"],
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": ["<all_urls>"],
   "background": { "service_worker": "service-worker.js" },
   "action": { "default_popup": "popup.html", "default_title": "DeepSight Detection" },
   "content_scripts": [

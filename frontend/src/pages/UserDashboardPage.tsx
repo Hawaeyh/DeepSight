@@ -3,7 +3,7 @@ import { ArrowRight, Clock3, FileSearch, Image, LogIn, Video } from "lucide-reac
 import { Link } from "react-router-dom";
 
 import Spinner from "../components/ui/Spinner";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 import { useDashboard } from "../hooks/useDashboard";
 import api from "../services/api";
 import type { UsageStatus } from "../types/auth";

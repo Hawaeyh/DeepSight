@@ -1,17 +1,27 @@
-import torch
+"""Manual checkpoint inspection utility; not an automated pytest test."""
 
-path = "app/models/production/binary/current_model.pth"
+import argparse
+from pathlib import Path
 
-try:
 
-    model = torch.load(
-        path,
-        map_location="cpu",
-        weights_only=False
-    )
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Inspect a local PyTorch checkpoint type.")
+    parser.add_argument("checkpoint", type=Path)
+    args = parser.parse_args()
+    if not args.checkpoint.is_file():
+        print(f"Checkpoint not found: {args.checkpoint}")
+        return 2
 
-    print(type(model))
+    import torch
 
-except Exception as e:
+    try:
+        model = torch.load(args.checkpoint, map_location="cpu", weights_only=False)
+    except Exception as error:
+        print(f"Checkpoint inspection failed: {error}")
+        return 1
+    print(type(model).__name__)
+    return 0
 
-    print(e)
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -4,17 +4,22 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.models.analysis import Analysis
 from app.services.firebase_service import FirebaseService
+from app.api.dependencies import require_admin
+from app.models.user import User
 
 router = APIRouter(prefix="/firebase", tags=["Firebase"])
 
 
 @router.get("/status")
-def firebase_status():
+def firebase_status(_: User = Depends(require_admin)):
     return FirebaseService.status()
 
 
 @router.post("/sync")
-def sync_existing_analyses(db: Session = Depends(get_db)):
+def sync_existing_analyses(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
     status = FirebaseService.status()
     if not status["connected"]:
         raise HTTPException(status_code=503, detail=status["error"])

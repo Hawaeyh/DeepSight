@@ -24,3 +24,9 @@ export interface AdminUsageAnalytics {
     trend: UserUsagePoint[];
     plans: Array<{ plan: string; users: number }>;
 }
+
+export interface AdminSystemOverview {
+    totalUsers: number; activeUsers: number; newUsersToday: number; totalAnalyses: number; analysesToday: number;
+    failedAnalyses: number; activeSubscriptions: number; videoQueue: number; activeVideoJobs: number; failedVideoJobs: number;
+    averageProcessingTime: number | null;
+}

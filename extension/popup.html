@@ -1,19 +1,15 @@
-<!doctype html>
-<html lang="en">
-  <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSight</title><link rel="stylesheet" href="popup.css"></head>
-  <body>
-    <header><img src="logo.png" alt=""><div><strong>DeepSight System</strong><span id="account">Not signed in</span></div></header>
-    <form id="login-form">
-      <input id="email" type="email" placeholder="Email" required>
-      <input id="password" type="password" placeholder="Password" required>
-      <button type="submit">Sign In</button>
-    </form>
-    <section id="controls" hidden>
-      <button id="scan" type="button">Scan Current Page</button>
-      <label id="pro-row"><input id="pro" type="checkbox"> Continuous Pro detection</label>
-      <button id="logout" type="button" class="secondary">Sign Out</button>
-    </section>
-    <p id="status"></p>
-    <script src="popup.js"></script>
-  </body>
-</html>
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DeepSight</title><link rel="stylesheet" href="popup.css"></head>
+<body>
+  <header><img src="logo.png" alt=""><div><strong>DeepSight</strong><span id="connection">Connected: checking</span></div><button id="dashboard" class="icon" title="Open dashboard">Open</button></header>
+  <section id="logged-out" hidden><h2>Detect manipulated media</h2><p>Sign in with your DeepSight account to use protected detection.</p><form id="login-form"><input id="email" type="email" autocomplete="username" placeholder="Email" required><input id="password" type="password" autocomplete="current-password" placeholder="Password" required><button type="submit">Sign In</button></form></section>
+  <main id="app" hidden>
+    <div class="account"><div><b id="account">Account</b><small id="plan">Starter plan</small></div><div class="usage"><span>Usage</span><b id="usage">--</b></div></div>
+    <nav aria-label="Detection sections"><button data-tab="image">Image</button><button data-tab="page" class="active">Page</button><button data-tab="video">Video</button><button data-tab="history">History</button><button data-tab="settings">Settings</button></nav>
+    <section class="panel" data-panel="image" hidden><h2>Single image</h2><p>Right-click or open an image, then scan the current page to label it.</p><button id="image-scan">Scan visible images</button></section>
+    <section class="panel" data-panel="page"><h2>Page image scan</h2><p>Analyses visible, sufficiently large, unique images with a bounded queue.</p><button id="scan">Scan Current Page</button><button id="scan-stop" class="secondary">Stop &amp; clear overlays</button></section>
+    <section class="panel" data-panel="video" hidden><h2>Continuous video</h2><p id="video-state">Selects the largest visible video. Start is always explicit.</p><div class="controls"><button id="video-start">Start</button><button id="video-pause" class="secondary">Pause / Resume</button><button id="video-stop" class="danger">Stop</button></div><div class="metrics"><span>Frames analysed<b id="frames">0</b></span><span>Prediction<b id="prediction">Ready</b></span><span>Confidence<b id="confidence">--</b></span></div></section>
+    <section class="panel" data-panel="history" hidden><h2>Recent sessions</h2><div id="history">Open this tab to load history.</div><button id="view-all" class="secondary">View All in Dashboard</button></section>
+    <section class="panel" data-panel="settings" hidden><h2>Settings</h2><label>Default model<select id="model"><option value="efficientnet">Loading approved models...</option></select></label><label>Default mode<select id="mode"><option value="page">Page Scan</option><option value="image">Single Image</option><option value="video">Video</option></select></label><label>Frame interval<input id="interval" type="range" min="1" max="5" step="0.5" value="1.5"><output id="interval-value">1.5 s</output></label><label>Maximum duration<select id="duration"><option value="60">1 minute</option><option value="180" selected>3 minutes</option><option value="300">5 minutes</option></select></label><label class="check"><input id="overlay" type="checkbox" checked> Show video overlay</label><label class="check"><input id="image-overlays" type="checkbox" checked> Show image overlays</label><button id="save-settings">Save Settings</button><button id="logout" class="secondary">Sign Out</button></section>
+  </main>
+  <p id="status" role="status" aria-live="polite"></p><script src="config.js"></script><script src="popup.js"></script>
+</body></html>

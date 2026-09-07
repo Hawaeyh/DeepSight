@@ -8,9 +8,9 @@ export interface Analysis {
 
     filename: string;
 
-    file_path: string;
-
     file_type: string;
+
+    source: string | null;
 
     file_extension: string;
 
@@ -63,5 +63,7 @@ export interface Analysis {
     created_at: string;
 
     updated_at: string;
+
+    quality_warnings?: string[] | null;
 
 }

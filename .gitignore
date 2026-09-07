@@ -30,6 +30,9 @@ coverage/
 .env.*
 
 !.env.example
+!**/.env.example
+env.cloudrun.yaml
+backend/env.cloudrun.yaml
 
 # ============================
 # IDE
@@ -58,6 +61,10 @@ logs/
 
 backend/uploads/
 backend/reports/
+uploads/
+storage/
+temporary/
+video-frames/
 
 # ============================
 # Database
@@ -70,9 +77,9 @@ backend/reports/
 # AI Models
 # ============================
 
-models/**/*.pth
-models/**/*.pt
-models/**/*.onnx
+*.pth
+*.pt
+*.onnx
 
 # ============================
 # Dataset
@@ -88,6 +95,13 @@ datasets/
 # ============================
 
 serviceAccountKey.json
+firebase-service-account.json
+**/serviceAccountKey.json
+**/firebase-service-account.json
+**/*firebase-adminsdk*.json
+**/*service-account*.json
+.firebaserc
+!.firebaserc.example
 
 # ============================
 # Build
@@ -96,6 +110,10 @@ serviceAccountKey.json
 build/
 
 .cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.run/
 
 # ============================
 # Chrome Extension Build

@@ -1,0 +1,13 @@
+{
+  "name": "deepsight-browser-extension",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "node --check config.js && node --check popup.js && node --check content-script.js && node --check service-worker.js",
+    "typecheck": "npm run lint",
+    "validate": "node scripts/validate-extension.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs"
+  }
+}

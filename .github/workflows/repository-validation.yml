@@ -1,0 +1,46 @@
+name: Repository validation
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require environment examples
+        run: test -f .env.example && test -f backend/.env.example && test -f frontend/.env.example
+      - name: Reject committed secrets and model weights
+        shell: bash
+        run: |
+          set -euo pipefail
+          tracked="$(git ls-files)"
+          if printf '%s\n' "$tracked" | grep -E '(^|/)(\.env|serviceAccountKey\.json|firebase-service-account\.json)$'; then
+            echo "A secret-bearing file is tracked." >&2
+            exit 1
+          fi
+          if printf '%s\n' "$tracked" | grep -E '\.(pth|pt|onnx)$'; then
+            echo "A model weight is tracked outside an approved artifact process." >&2
+            exit 1
+          fi
+      - name: Check whitespace
+        run: git diff --check HEAD~1 HEAD
+      - name: Check local Markdown links
+        shell: python
+        run: |
+          import pathlib, re
+          root = pathlib.Path.cwd()
+          failures = []
+          pattern = re.compile(r"\[[^]]+\]\((?!https?://|#)([^)]+)\)")
+          for document in root.rglob("*.md"):
+              if any(part in {"node_modules", ".git", ".venv"} for part in document.parts):
+                  continue
+              for target in pattern.findall(document.read_text(encoding="utf-8")):
+                  clean = target.split("#", 1)[0]
+                  if clean and not (document.parent / clean).resolve().exists():
+                      failures.append(f"{document}: {target}")
+          if failures:
+              raise SystemExit("Broken local links:\n" + "\n".join(failures))

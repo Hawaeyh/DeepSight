@@ -4,7 +4,8 @@ import torch
 from PIL import Image
 from torchvision import transforms
 
-from app.ai.face.face_cropper import extract_face
+from app.ai.face.face_cropper import extract_all_face_details, extract_face_details
+from app.core.config import settings
 from app.ai.models.model_loader import (
     CLASS_NAMES,
     DEVICE,
@@ -22,6 +23,28 @@ transform = transforms.Compose([
 ])
 
 
+def predict_faces(image_path: str, model_key: str = "efficientnet") -> list[dict]:
+    """Run one cached binary-model batch for every detected face in a frame."""
+    binary_model, model_spec = get_binary_model(model_key)
+    faces = extract_all_face_details(image_path)
+    if not faces:
+        return []
+    batch = torch.stack([transform(Image.fromarray(face["crop"])) for face in faces]).to(DEVICE)
+    with torch.no_grad():
+        probabilities = torch.softmax(binary_model(batch), dim=1)
+    results = []
+    for face, values in zip(faces, probabilities):
+        fake = round(values[0].item() * 100, 2)
+        real = round(values[1].item() * 100, 2)
+        prediction = "Fake" if fake >= real else "Real"
+        results.append({
+            **{key: value for key, value in face.items() if key != "crop"},
+            "prediction": prediction, "fake_probability": fake, "real_probability": real,
+            "confidence": max(fake, real), "model_name": model_spec["name"], "model_version": model_spec["version"],
+        })
+    return results
+
+
 def predict(image_path: str, model_key: str = "efficientnet"):
 
     start = time.time()
@@ -32,9 +55,9 @@ def predict(image_path: str, model_key: str = "efficientnet"):
 
     image_width, image_height = original.size
 
-    face = extract_face(image_path)
+    face_details = extract_face_details(image_path)
 
-    if face is None:
+    if face_details is None:
 
         return {
 
@@ -74,7 +97,7 @@ def predict(image_path: str, model_key: str = "efficientnet"):
 
         }
 
-    image = Image.fromarray(face)
+    image = Image.fromarray(face_details["crop"])
 
     tensor = (
         transform(image)
@@ -148,6 +171,17 @@ def predict(image_path: str, model_key: str = "efficientnet"):
             else "Fake"
         )
 
+        display_result = (
+            "inconclusive"
+            if confidence < settings.IMAGE_INCONCLUSIVE_THRESHOLD
+            else "likely_real" if prediction == "Real" else "likely_manipulated"
+        )
+        display_label = {
+            "likely_real": "Likely Real",
+            "likely_manipulated": "Likely Manipulated",
+            "inconclusive": "Inconclusive",
+        }[display_result]
+
         return {
 
             "success": True,
@@ -179,8 +213,12 @@ def predict(image_path: str, model_key: str = "efficientnet"):
             "device": str(DEVICE),
 
             "face_detected": True,
-
-            "face_count": 1,
+            "face_count": face_details["face_count"],
+            "selected_face_index": face_details["selected_face_index"],
+            "selected_face_box": face_details["selected_face_box"],
+            "face_detection_confidence": face_details["face_detection_confidence"],
+            "result": display_result,
+            "display_label": display_label,
 
             "image_width": image_width,
 

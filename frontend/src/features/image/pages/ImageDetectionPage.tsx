@@ -14,9 +14,9 @@ import ModelCard from "../components/ModelCard";
 import ProbabilityCard from "../components/ProbabilityCard";
 import ModelSelector from "../components/ModelSelector";
 import FeedbackPanel from "../components/FeedbackPanel";
+import AnalysisProgress from "../components/AnalysisProgress";
 
 import EmptyState from "../../../components/ui/EmptyState";
-import Spinner from "../../../components/ui/Spinner";
 
 import { useDashboard } from "../../../hooks/useDashboard";
 import { useImageDetection } from "../hooks/useImageDetection";
@@ -38,6 +38,9 @@ export default function ImageDetectionPage() {
         recent,
         loading,
         error,
+        stage,
+        progress,
+        progressMessage,
 
         selectImage,
         setSelectedModel,
@@ -46,20 +49,6 @@ export default function ImageDetectionPage() {
         reset,
 
     } = useImageDetection();
-
-    if (!overview) {
-
-        return (
-
-            <div className="flex items-center justify-center h-[70vh]">
-
-                <Spinner />
-
-            </div>
-
-        );
-
-    }
 
     return (
 
@@ -122,6 +111,8 @@ export default function ImageDetectionPage() {
                 onChange={setSelectedModel}
             />
 
+            {(selectedFile || stage === "failed" || stage === "completed") && <AnalysisProgress stage={stage} progress={progress} message={progressMessage} />}
+
             {/* ======================================== */}
             {/* Hero Result */}
             {/* ======================================== */}
@@ -136,7 +127,7 @@ export default function ImageDetectionPage() {
 
             )}
 
-            {result && <FeedbackPanel result={result} />}
+            {result && <div id="analysis-feedback"><FeedbackPanel result={result} /></div>}
 
             {/* ======================================== */}
             {/* Preview + Pipeline */}
@@ -216,13 +207,13 @@ export default function ImageDetectionPage() {
 
                 <DetectionStatistics
 
-                    today={overview.todayDetection ?? 0}
+                    today={overview?.todayDetection ?? 0}
 
-                    week={overview.weekDetection ?? 0}
+                    week={overview?.weekDetection ?? 0}
 
-                    confidence={overview.averageConfidence}
+                    confidence={overview?.averageConfidence ?? 0}
 
-                    device={overview.device ?? "CPU"}
+                    device={overview?.device ?? "CPU"}
 
                 />
 
@@ -249,6 +240,7 @@ export default function ImageDetectionPage() {
                 disabled={!selectedFile}
 
                 canDownload={!!result}
+                completed={stage === "completed"}
 
                 onAnalyze={detectImage}
 
@@ -257,6 +249,7 @@ export default function ImageDetectionPage() {
                 onReset={reset}
 
                 onHistory={() => navigate("/history")}
+                onFeedback={() => document.getElementById("analysis-feedback")?.scrollIntoView({ behavior: "smooth" })}
 
             />
 

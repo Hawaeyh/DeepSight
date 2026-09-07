@@ -297,6 +297,8 @@ export default function PredictionResultCard({
                         icon={<ShieldCheck size={18}/>}
                     />
 
+                    {result.quality_warnings && result.quality_warnings.length > 0 && <div className="mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-left"><h3 className="font-semibold text-amber-200">Quality warnings</h3><ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-100">{result.quality_warnings.map(warning => <li key={warning}>{warning}</li>)}</ul></div>}
+
                     {manipulation && <InfoRow label="Fake Category" value={manipulation.category} icon={<ShieldAlert size={18}/>} />}
 
                     {manipulation && <InfoRow label="Manipulation" value={manipulation.technique} icon={<Activity size={18}/>} />}

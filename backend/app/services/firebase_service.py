@@ -2,8 +2,6 @@ from datetime import date, datetime
 from pathlib import Path
 from threading import Lock
 
-import firebase_admin
-from firebase_admin import credentials, firestore
 from loguru import logger
 
 from app.core.config import settings
@@ -16,6 +14,10 @@ class FirebaseService:
 
     @classmethod
     def _initialize(cls):
+        if not settings.FIREBASE_ENABLED:
+            cls._error = "Firebase is disabled in this environment."
+            return None
+
         if cls._client is not None or cls._error is not None:
             return cls._client
 
@@ -30,6 +32,9 @@ class FirebaseService:
                 return None
 
             try:
+                import firebase_admin
+                from firebase_admin import credentials, firestore
+
                 if not firebase_admin._apps:
                     options = {"projectId": project_id} if project_id else None
                     if credentials_path:

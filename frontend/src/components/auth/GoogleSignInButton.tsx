@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 
 declare global {
     interface Window {
@@ -19,9 +19,16 @@ declare global {
 export default function GoogleSignInButton() {
     const container = useRef<HTMLDivElement>(null);
     const navigate = useNavigate();
-    const { googleLogin } = useAuth();
+    const { googleLogin, firebaseGoogleLogin, firebaseConfigured } = useAuth();
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+
+    async function signInFirebase() {
+        try { setLoading(true); setError(null); await firebaseGoogleLogin(); navigate("/dashboard"); }
+        catch (requestError: any) { setError(requestError?.response?.data?.detail?.message ?? requestError?.message ?? "Firebase Google sign-in failed."); }
+        finally { setLoading(false); }
+    }
 
     useEffect(() => {
         if (!clientId || !container.current) return;
@@ -57,6 +64,9 @@ export default function GoogleSignInButton() {
         }
     }, [clientId, googleLogin, navigate]);
 
+    if (firebaseConfigured) {
+        return <><button type="button" disabled={loading} onClick={signInFirebase} className="w-full rounded-lg border border-slate-700 p-3 hover:border-cyan-500 disabled:opacity-60">{loading ? "Connecting to Firebase..." : "Continue with Google through Firebase"}</button>{error && <p className="mt-2 text-sm text-red-400">{error}</p>}</>;
+    }
     if (!clientId) {
         return <button type="button" disabled title="Configure VITE_GOOGLE_CLIENT_ID to enable Google sign-in" className="w-full rounded-lg border border-slate-700 p-3 text-slate-500">Continue with Google (configuration required)</button>;
     }

@@ -10,40 +10,40 @@ class DashboardService:
     # ==========================================
 
     @staticmethod
-    def overview(db: Session):
+    def overview(db: Session, owner_user_id: int):
 
-        latest = DashboardRepository.latest_detection(db)
+        latest = DashboardRepository.latest_detection(db, owner_user_id)
 
-        distribution = DashboardRepository.distribution(db)
+        distribution = DashboardRepository.distribution(db, owner_user_id)
 
         return {
 
             "totalDetection":
-                DashboardRepository.total_detection(db),
+                DashboardRepository.total_detection(db, owner_user_id),
 
             "totalImages":
-                DashboardRepository.total_image(db),
+                DashboardRepository.total_image(db, owner_user_id),
 
             "totalVideos":
-                DashboardRepository.total_video(db),
+                DashboardRepository.total_video(db, owner_user_id),
 
             "totalFake":
-                DashboardRepository.total_fake(db),
+                DashboardRepository.total_fake(db, owner_user_id),
 
             "totalReal":
-                DashboardRepository.total_real(db),
+                DashboardRepository.total_real(db, owner_user_id),
 
             "averageConfidence":
-                DashboardRepository.average_confidence(db),
+                DashboardRepository.average_confidence(db, owner_user_id),
 
             "averageProcessingTime":
-                DashboardRepository.average_processing_time(db),
+                DashboardRepository.average_processing_time(db, owner_user_id),
 
             "todayDetection":
-                DashboardRepository.today_detection(db),
+                DashboardRepository.today_detection(db, owner_user_id),
 
             "weekDetection":
-                DashboardRepository.week_detection(db),
+                DashboardRepository.week_detection(db, owner_user_id),
 
             "latestPrediction":
                 latest.prediction if latest else None,
@@ -78,27 +78,27 @@ class DashboardService:
     # ==========================================
 
     @staticmethod
-    def trend(db: Session):
+    def trend(db: Session, owner_user_id: int):
 
-        return DashboardRepository.trend(db)
+        return DashboardRepository.trend(db, owner_user_id)
 
     # ==========================================
     # DISTRIBUTION
     # ==========================================
 
     @staticmethod
-    def distribution(db: Session):
+    def distribution(db: Session, owner_user_id: int):
 
-        return DashboardRepository.distribution(db)
+        return DashboardRepository.distribution(db, owner_user_id)
 
     # ==========================================
     # RECENT
     # ==========================================
 
     @staticmethod
-    def recent(db: Session):
+    def recent(db: Session, owner_user_id: int):
 
-        analyses = DashboardRepository.recent_detection(db)
+        analyses = DashboardRepository.recent_detection(db, owner_user_id)
 
         return [
 
@@ -129,5 +129,5 @@ class DashboardService:
         ]
 
     @staticmethod
-    def models(db: Session):
-        return DashboardRepository.model_metrics(db)
+    def models(db: Session, owner_user_id: int):
+        return DashboardRepository.model_metrics(db, owner_user_id)

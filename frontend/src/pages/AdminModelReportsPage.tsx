@@ -1,12 +1,17 @@
+import { useEffect, useState } from "react";
 import { BarChart3, CheckCircle2, Database, Gauge } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import EmptyState from "../components/ui/EmptyState";
 import Spinner from "../components/ui/Spinner";
-import { useDashboard } from "../hooks/useDashboard";
+import api from "../services/api";
+import type { ModelMetric } from "../types/dashboard";
 
 export default function AdminModelReportsPage() {
-    const { modelMetrics, loading, error } = useDashboard();
+    const [modelMetrics, setModelMetrics] = useState<ModelMetric[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    useEffect(() => { api.get<ModelMetric[]>("/admin/model-metrics").then(response => setModelMetrics(response.data)).catch(() => setError("Model metrics are unavailable.")).finally(() => setLoading(false)); }, []);
 
     if (loading) return <div className="flex h-[60vh] items-center justify-center"><Spinner /></div>;
     if (error) return <EmptyState title="Model reports unavailable" description={error} />;

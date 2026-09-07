@@ -3,28 +3,22 @@ from threading import Lock
 
 import timm
 import torch
+from loguru import logger
 from torch import nn
 
 from app.ai.architectures.deepsightnet import DeepSightNet
+from app.ai.model_status import (
+    MODEL_SPECS,
+    MODEL_ROOT,
+    ModelUnavailableError,
+    mark_binary_loaded,
+    mark_device,
+    mark_multiclass_loaded,
+)
+from app.core.config import settings
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-ROOT = Path(__file__).resolve().parents[2]
-MODEL_DIR = ROOT / "models" / "production"
-
-MODEL_SPECS = {
-    "deepsightnet": {
-        "name": "DeepSightNet",
-        "version": "Binary V3",
-        "description": "Custom DeepSight residual attention network",
-        "checkpoint": MODEL_DIR / "binary" / "best_model_deepsightnet.pth",
-    },
-    "efficientnet": {
-        "name": "EfficientNet-B0",
-        "version": "Binary V2",
-        "description": "Efficient convolutional deepfake detector",
-        "checkpoint": MODEL_DIR / "binary" / "efficientnet_b0_binary_v2_best.pth",
-    },
-}
+mark_device(str(DEVICE))
 
 CLASS_NAMES = [
     "celebdf",
@@ -40,10 +34,6 @@ CLASS_NAMES = [
 _binary_models: dict[str, nn.Module] = {}
 _multiclass_model: nn.Module | None = None
 _load_lock = Lock()
-
-
-class ModelUnavailableError(RuntimeError):
-    pass
 
 
 def _create_binary_model(model_key: str) -> nn.Module:
@@ -64,6 +54,8 @@ def _load_checkpoint(model: nn.Module, checkpoint_path: Path) -> nn.Module:
 
 
 def get_binary_model(model_key: str) -> tuple[nn.Module, dict]:
+    if settings.MODEL_LOADING == "disabled":
+        raise ModelUnavailableError("Model loading is disabled in this environment.")
     spec = MODEL_SPECS.get(model_key)
     if spec is None:
         raise ValueError(f"Unknown model: {model_key}")
@@ -78,7 +70,8 @@ def get_binary_model(model_key: str) -> tuple[nn.Module, dict]:
                 _create_binary_model(model_key),
                 spec["checkpoint"],
             )
-            print(f"Loaded {spec['name']} on {DEVICE}")
+            mark_binary_loaded(model_key)
+            logger.info("Loaded {} on {}", spec["name"], DEVICE)
 
     return _binary_models[model_key], spec
 
@@ -86,27 +79,15 @@ def get_binary_model(model_key: str) -> tuple[nn.Module, dict]:
 def get_multiclass_model() -> nn.Module:
     global _multiclass_model
 
+    if settings.MODEL_LOADING == "disabled":
+        raise ModelUnavailableError("Model loading is disabled in this environment.")
+
     with _load_lock:
         if _multiclass_model is None:
             model = timm.create_model("efficientnet_b0", pretrained=False, num_classes=8)
-            checkpoint_path = MODEL_DIR / "multiclass" / "efficientnet_b0_multiclass_best.pth"
+            checkpoint_path = MODEL_ROOT / "multiclass" / "efficientnet_b0_multiclass_best.pth"
             _multiclass_model = _load_checkpoint(model, checkpoint_path)
-            print(f"Loaded multiclass model on {DEVICE}")
+            mark_multiclass_loaded()
+            logger.info("Loaded multiclass model on {}", DEVICE)
 
     return _multiclass_model
-
-
-def get_model_catalog() -> list[dict]:
-    return [
-        {
-            "key": key,
-            "name": spec["name"],
-            "version": spec["version"],
-            "description": spec["description"],
-            "available": spec["checkpoint"].is_file(),
-        }
-        for key, spec in MODEL_SPECS.items()
-    ]
-
-
-print(f"Inference device: {DEVICE}")

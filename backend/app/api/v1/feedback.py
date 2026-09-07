@@ -5,14 +5,16 @@ from pydantic import BaseModel, model_validator
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.analysis import Analysis
+from app.api.dependencies import get_current_user, require_admin
+from app.models.user import User
+from app.repositories.analysis_repository import AnalysisRepository
 from app.services.feedback_service import FeedbackService
 
 router = APIRouter(prefix="/feedback", tags=["Feedback"])
 
 
 class FeedbackRequest(BaseModel):
-    analysis_id: int
+    analysis_id: int | None = None
     is_correct: bool
     corrected_prediction: Literal["Real", "Fake"] | None = None
     fake_category: Literal["AI-generated", "Deepfake"] | None = None
@@ -28,8 +30,12 @@ class FeedbackRequest(BaseModel):
 
 
 @router.post("")
-def submit_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
-    analysis = db.query(Analysis).filter(Analysis.id == request.analysis_id).first()
+def submit_feedback(
+    request: FeedbackRequest,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+):
+    analysis = AnalysisRepository.get_owned(db, request.analysis_id, user.id)
     if analysis is None:
         raise HTTPException(status_code=404, detail="Analysis not found.")
 
@@ -40,6 +46,7 @@ def submit_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
         corrected_prediction=request.corrected_prediction,
         fake_category=request.fake_category,
         manipulation_type=request.manipulation_type,
+        owner_user_id=user.id,
     )
     return {
         "id": feedback.id,
@@ -49,5 +56,19 @@ def submit_feedback(request: FeedbackRequest, db: Session = Depends(get_db)):
 
 
 @router.get("/hard-examples")
-def hard_examples(db: Session = Depends(get_db)):
-    return FeedbackService.list_hard_examples(db)
+def hard_examples(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+):
+    return [
+        {
+            "id": item.id,
+            "analysis_id": item.analysis_id,
+            "corrected_prediction": item.corrected_prediction,
+            "fake_category": item.fake_category,
+            "manipulation_type": item.manipulation_type,
+            "status": item.status,
+            "created_at": item.created_at,
+        }
+        for item in FeedbackService.list_hard_examples(db)
+    ]

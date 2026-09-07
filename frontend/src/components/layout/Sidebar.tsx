@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../hooks/useAuth";
 import UsageWidget from "../subscription/UsageWidget";
 
 const publicMenus = [
@@ -37,6 +37,7 @@ const userMenus = [
 
 const adminMenus = [
     { title: "Admin Analytics", path: "/admin", icon: BarChart3 },
+    { title: "All Analyses", path: "/admin/analyses", icon: History },
     { title: "Model Reports", path: "/admin/model-reports", icon: FileChartColumn },
     { title: "User Management", path: "/admin/users", icon: Users },
 ];

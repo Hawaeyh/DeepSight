@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     analyzeImage,
@@ -18,8 +18,12 @@ import type { ImageMetadata } from "../types/metadata";
 import type { RecentDetection } from "../../../types/dashboard";
 import type { DetectionModel, ModelKey } from "../../../types/model";
 import { getApiErrorMessage } from "../../../utils/apiError";
+import { useAuth } from "../../../hooks/useAuth";
+import type { AnalysisStage } from "../components/AnalysisProgress";
 
 export function useImageDetection() {
+
+    const { authStatus } = useAuth();
 
     const storedModel = localStorage.getItem("deepsight-default-model") as ModelKey | null;
 
@@ -46,8 +50,25 @@ export function useImageDetection() {
 
     const [error, setError] =
         useState<string | null>(null);
+    const [stage, setStage] = useState<AnalysisStage>("idle");
+    const [progress, setProgress] = useState(0);
+    const [progressMessage, setProgressMessage] = useState("Select an image when you are ready.");
+    const inFlight = useRef(false);
+    const stageTimers = useRef<number[]>([]);
+
+    const clearStageTimers = useCallback(() => {
+        stageTimers.current.forEach(timer => window.clearTimeout(timer));
+        stageTimers.current = [];
+    }, []);
+
+    useEffect(() => clearStageTimers, [clearStageTimers]);
 
     const loadRecent = useCallback(async () => {
+
+        if (authStatus !== "authenticated") {
+            setRecent([]);
+            return;
+        }
 
         try {
 
@@ -63,7 +84,7 @@ export function useImageDetection() {
 
         }
 
-    }, []);
+    }, [authStatus]);
 
     useEffect(() => {
 
@@ -133,6 +154,9 @@ export function useImageDetection() {
         setMetadata(null);
 
         setError(null);
+        setStage("ready");
+        setProgress(0);
+        setProgressMessage("Image selected and ready to analyse.");
 
         try {
             setMetadata(await getImageMetadata(file));
@@ -153,15 +177,42 @@ export function useImageDetection() {
 
         }
 
+        if (inFlight.current) return;
+
         try {
+
+            inFlight.current = true;
 
             setLoading(true);
 
             setError(null);
 
+            setResult(null);
+            clearStageTimers();
+            setStage("uploading");
+            setProgress(10);
+            setProgressMessage("Preparing your image for secure upload...");
+            const estimatedStages: Array<[number, AnalysisStage, number, string]> = [
+                [400, "validating", 25, "Validating image quality and format..."],
+                [1000, "detecting-face", 40, "Detecting facial regions..."],
+                [1900, "loading-model", 55, "Preparing the configured detection model..."],
+                [3000, "analysing", 75, "Running deepfake detection models..."],
+                [5000, "saving", 90, "Waiting for the server to prepare your result..."],
+            ];
+            stageTimers.current = estimatedStages.map(([delay, nextStage, nextProgress, message]) => window.setTimeout(() => {
+                if (!inFlight.current) return;
+                setStage(nextStage); setProgress(nextProgress); setProgressMessage(message);
+            }, delay));
+
             const response = await analyzeImage(selectedFile, selectedModel);
 
+            clearStageTimers();
+
             setResult(response);
+
+            setStage("completed");
+            setProgress(100);
+            setProgressMessage("Analysis completed successfully.");
 
             await loadRecent();
 
@@ -169,14 +220,21 @@ export function useImageDetection() {
 
         catch (error) {
 
+            clearStageTimers();
+
             console.error(error);
 
             setError(getApiErrorMessage(error, "Image analysis failed."));
+
+            setStage("failed");
+            setProgress(current => Math.min(current, 90));
+            setProgressMessage("Analysis failed. Review the message and try again.");
 
         }
 
         finally {
 
+            inFlight.current = false;
             setLoading(false);
 
         }
@@ -231,6 +289,9 @@ export function useImageDetection() {
         setMetadata(null);
 
         setError(null);
+        setStage("idle");
+        setProgress(0);
+        setProgressMessage("Select an image when you are ready.");
 
     }
 
@@ -259,6 +320,10 @@ export function useImageDetection() {
         loading,
 
         error,
+
+        stage,
+        progress,
+        progressMessage,
 
         hasResult: result !== null,
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import {
     getDashboardOverview,
@@ -15,8 +15,25 @@ import type {
     RecentDetection,
     ModelMetric,
 } from "../types/dashboard";
+import { useAuth } from "./useAuth";
+
+type DashboardPayload = [DashboardOverview, DetectionTrend[], PredictionDistribution, RecentDetection[], ModelMetric[]];
+let dashboardRequest: Promise<DashboardPayload> | null = null;
+
+function fetchDashboard(): Promise<DashboardPayload> {
+    if (!dashboardRequest) {
+        dashboardRequest = Promise.all([
+            getDashboardOverview(), getDetectionTrend(), getPredictionDistribution(), getRecentDetection(), getModelMetrics(),
+        ]).finally(() => { dashboardRequest = null; }) as Promise<DashboardPayload>;
+    }
+    return dashboardRequest;
+}
 
 export function useDashboard() {
+
+    const { authStatus } = useAuth();
+    const authStatusRef = useRef(authStatus);
+    authStatusRef.current = authStatus;
 
     const [overview, setOverview] =
         useState<DashboardOverview | null>(null);
@@ -41,6 +58,10 @@ export function useDashboard() {
 
     const loadDashboard = useCallback(async () => {
 
+        if (authStatus !== "authenticated") {
+            setLoading(authStatus === "loading");
+            return;
+        }
         try {
 
             setLoading(true);
@@ -59,24 +80,9 @@ export function useDashboard() {
 
                 modelMetricsData,
 
-            ] = await Promise.all([
+            ] = await fetchDashboard();
 
-                getDashboardOverview(),
-
-                getDetectionTrend(),
-
-                getPredictionDistribution(),
-
-                getRecentDetection(),
-
-                getModelMetrics(),
-
-            ]);
-
-            console.log("Overview:", overviewData);
-            console.log("Trend:", trendData);
-            console.log("Distribution:", distributionData);
-            console.log("Recent:", recentData);
+            if (authStatusRef.current !== "authenticated") return;
 
             setOverview(overviewData);
 
@@ -112,10 +118,15 @@ export function useDashboard() {
 
         }
 
-    }, []);
+    }, [authStatus]);
 
     useEffect(() => {
 
+        if (authStatus !== "authenticated") {
+            setOverview(null); setTrend([]); setDistribution(null); setRecent([]); setModelMetrics([]); setError(null);
+            setLoading(authStatus === "loading");
+            return;
+        }
         loadDashboard();
 
         const interval = setInterval(() => {
@@ -126,7 +137,7 @@ export function useDashboard() {
 
         return () => clearInterval(interval);
 
-    }, [loadDashboard]);
+    }, [authStatus, loadDashboard]);
 
     return {
 

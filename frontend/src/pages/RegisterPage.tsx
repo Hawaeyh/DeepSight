@@ -3,19 +3,34 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Button from "../components/ui/Button";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 export default function RegisterPage() {
-    const { register } = useAuth();
+    const { register, firebaseRegister, firebaseConfigured } = useAuth();
     const navigate = useNavigate();
     const [form, setForm] = useState({ fullName: "", email: "", password: "" });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [message, setMessage] = useState<string | null>(null);
 
     async function submit(event: React.FormEvent) {
         event.preventDefault();
+        try {
+            setLoading(true); setError(null); setMessage(null);
+            if (firebaseConfigured) {
+                await firebaseRegister(form.email, form.password);
+                setMessage("Firebase account created. Verify your email, then sign in.");
+            } else {
+                await register(form.fullName, form.email, form.password); navigate("/dashboard");
+            }
+        }
+        catch (requestError: any) { setError(typeof requestError?.response?.data?.detail === "string" ? requestError.response.data.detail : requestError?.response?.data?.detail?.message ?? requestError?.message ?? "Unable to create account."); }
+        finally { setLoading(false); }
+    }
+
+    async function localRegister() {
         try { setLoading(true); setError(null); await register(form.fullName, form.email, form.password); navigate("/dashboard"); }
-        catch (requestError: any) { setError(requestError?.response?.data?.detail ?? "Unable to create account."); }
+        catch (requestError: any) { setError(typeof requestError?.response?.data?.detail === "string" ? requestError.response.data.detail : requestError?.response?.data?.detail?.message ?? "Unable to create local account."); }
         finally { setLoading(false); }
     }
 
@@ -28,7 +43,9 @@ export default function RegisterPage() {
                     <label className="block"><span className="mb-2 block text-sm">Email</span><input required type="email" value={form.email} onChange={event => setForm({ ...form, email: event.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3" /></label>
                     <label className="block"><span className="mb-2 block text-sm">Password</span><input required minLength={8} type="password" value={form.password} onChange={event => setForm({ ...form, password: event.target.value })} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3" /><span className="mt-1 block text-xs text-slate-500">At least 8 characters.</span></label>
                     {error && <p className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
-                    <Button type="submit" disabled={loading} className="w-full">{loading ? "Creating account..." : "Create Account"}</Button>
+                    {message && <p className="rounded-lg bg-green-500/10 p-3 text-sm text-green-300">{message}</p>}
+                    <Button type="submit" disabled={loading} className="w-full">{loading ? "Creating account..." : firebaseConfigured ? "Create Firebase Account" : "Create Account"}</Button>
+                    {firebaseConfigured && <Button type="button" variant="secondary" disabled={loading} onClick={localRegister} className="w-full">Create Local DeepSight Account</Button>}
                     <GoogleSignInButton />
                     <p className="text-center text-sm text-slate-400">Already registered? <Link to="/login" className="text-cyan-400">Sign in</Link></p>
                 </form>

@@ -18,6 +18,8 @@ def save_uploaded_image(file: UploadFile):
 
     destination = IMAGE_UPLOAD_DIR / filename
 
+    destination.parent.mkdir(parents=True, exist_ok=True)
+
     with open(destination, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
@@ -31,6 +33,8 @@ def save_uploaded_video(file: UploadFile):
     filename = f"{uuid4()}{extension}"
 
     destination = VIDEO_UPLOAD_DIR / filename
+
+    destination.parent.mkdir(parents=True, exist_ok=True)
 
     with open(destination, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)

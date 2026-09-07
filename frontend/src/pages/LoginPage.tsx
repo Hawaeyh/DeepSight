@@ -3,10 +3,10 @@ import { Link, useNavigate } from "react-router-dom";
 
 import Button from "../components/ui/Button";
 import GoogleSignInButton from "../components/auth/GoogleSignInButton";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../hooks/useAuth";
 
 export default function LoginPage() {
-    const { login } = useAuth();
+    const { login, firebaseLogin, firebaseConfigured } = useAuth();
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -15,8 +15,24 @@ export default function LoginPage() {
 
     async function submit(event: React.FormEvent) {
         event.preventDefault();
-        try { setLoading(true); setError(null); await login(email, password); navigate("/dashboard"); }
-        catch (requestError: any) { setError(requestError?.response?.data?.detail ?? "Unable to sign in."); }
+        try {
+            setLoading(true);
+            setError(null);
+            const response = firebaseConfigured ? await firebaseLogin(email, password) : await login(email, password);
+            const redirectPath = response?.user?.role === "admin" ? "/admin" : "/dashboard";
+            navigate(redirectPath);
+        }
+        catch (requestError: any) {
+            setError(requestError?.response?.data?.detail ?? "Unable to sign in.");
+        }
+        finally {
+            setLoading(false);
+        }
+    }
+
+    async function localLogin() {
+        try { setLoading(true); setError(null); const response = await login(email, password); navigate(response.user.role === "admin" ? "/admin" : "/dashboard"); }
+        catch (requestError: any) { setError(typeof requestError?.response?.data?.detail === "string" ? requestError.response.data.detail : requestError?.response?.data?.detail?.message ?? "Unable to sign in with the local account."); }
         finally { setLoading(false); }
     }
 
@@ -29,7 +45,8 @@ export default function LoginPage() {
                     <label className="block"><span className="mb-2 block text-sm">Email</span><input required type="email" value={email} onChange={event => setEmail(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 outline-none focus:border-cyan-500" /></label>
                     <label className="block"><span className="mb-2 block text-sm">Password</span><input required type="password" value={password} onChange={event => setPassword(event.target.value)} className="w-full rounded-lg border border-slate-700 bg-slate-950 p-3 outline-none focus:border-cyan-500" /></label>
                     {error && <p className="rounded-lg bg-red-500/10 p-3 text-sm text-red-300">{error}</p>}
-                    <Button type="submit" disabled={loading} className="w-full">{loading ? "Signing in..." : "Sign In"}</Button>
+                    <Button type="submit" disabled={loading} className="w-full">{loading ? "Signing in..." : firebaseConfigured ? "Sign In with Firebase" : "Sign In"}</Button>
+                    {firebaseConfigured && <Button type="button" variant="secondary" disabled={loading || !email || !password} onClick={localLogin} className="w-full">Use Local DeepSight Account</Button>}
                     <div className="flex items-center gap-3 text-xs text-slate-500"><span className="h-px flex-1 bg-slate-700" />OR<span className="h-px flex-1 bg-slate-700" /></div>
                     <GoogleSignInButton />
                     <p className="text-center text-sm text-slate-400">No account? <Link to="/register" className="text-cyan-400 hover:underline">Create one</Link></p>

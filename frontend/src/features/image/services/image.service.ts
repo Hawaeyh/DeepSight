@@ -1,4 +1,4 @@
-import api from "../../../services/api";
+import api, { ensureGuestSession } from "../../../services/api";
 import type { ImageDetectionResponse } from "../types/image";
 import type { ModelCatalogResponse, ModelKey } from "../../../types/model";
 
@@ -6,6 +6,8 @@ export async function analyzeImage(
     file: File,
     model: ModelKey,
 ): Promise<ImageDetectionResponse> {
+
+    await ensureGuestSession();
 
     const formData = new FormData();
 

@@ -6,15 +6,27 @@ from sqlalchemy import (
     String,
     Float,
     Boolean,
+    CheckConstraint,
     DateTime,
+    ForeignKey,
+    Index,
+    JSON,
 )
 
 from app.core.database import Base
+from app.core.config import settings
 
 
 class Analysis(Base):
 
     __tablename__ = "analysis"
+    __table_args__ = (
+        CheckConstraint(
+            "NOT (owner_user_id IS NOT NULL AND guest_session_id IS NOT NULL)",
+            name="analysis_single_owner",
+        ),
+        Index("ix_analysis_owner_user_id_created_at", "owner_user_id", "created_at"),
+    )
 
     # ==========================================================
     # Primary Key
@@ -43,6 +55,7 @@ class Analysis(Base):
     file_type = Column(
         String(20),           # Image / Video
         nullable=False,
+        index=True,
     )
 
     file_extension = Column(
@@ -62,6 +75,7 @@ class Analysis(Base):
     prediction = Column(
         String(20),           # Real / Fake
         nullable=False,
+        index=True,
     )
 
     confidence = Column(
@@ -158,6 +172,7 @@ class Analysis(Base):
         String(100),
         nullable=False,
         default="EfficientNet-B0",
+        index=True,
     )
 
     model_version = Column(
@@ -206,6 +221,7 @@ class Analysis(Base):
     created_at = Column(
         DateTime,
         default=datetime.utcnow,
+        index=True,
     )
 
     updated_at = Column(
@@ -213,3 +229,38 @@ class Analysis(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
+
+    @property
+    def result(self) -> str:
+        if self.confidence < settings.IMAGE_INCONCLUSIVE_THRESHOLD:
+            return "inconclusive"
+        return "likely_real" if self.prediction == "Real" else "likely_manipulated"
+
+    @property
+    def display_label(self) -> str:
+        return {
+            "likely_real": "Likely Real",
+            "likely_manipulated": "Likely Manipulated",
+            "inconclusive": "Inconclusive",
+        }[self.result]
+
+    owner_user_id = Column(
+        Integer,
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+
+    guest_session_id = Column(
+        Integer,
+        ForeignKey("guest_sessions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+
+    source = Column(String(40), nullable=True, default="web", index=True)
+    quality_metadata = Column(JSON, nullable=True)
+    quality_warnings = Column(JSON, nullable=True)
+    selected_face_index = Column(Integer, nullable=True)
+    selected_face_box = Column(JSON, nullable=True)
+    face_detection_confidence = Column(Float, nullable=True)

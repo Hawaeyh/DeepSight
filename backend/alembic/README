@@ -1,0 +1,4 @@
+DeepSight schema migrations.
+
+The database URL is supplied by application settings or an explicit in-memory
+Alembic configuration. No credential is stored in alembic.ini.

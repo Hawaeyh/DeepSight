@@ -11,16 +11,21 @@ from fastapi import (
 )
 
 from sqlalchemy.orm import Session
+from loguru import logger
 
 from app.core.database import get_db
-from app.ai.models.model_loader import ModelUnavailableError
+from app.core.config import settings
+from app.api.dependencies import AnalysisPrincipal, get_analysis_principal
+from app.ai.model_status import ModelUnavailableError
 from app.repositories.analysis_repository import AnalysisRepository
 from app.schemas.analysis import AnalysisResponse
 from app.services.ai_service import AIService
 from app.services.analysis_service import AnalysisService
-from app.services.file_service import save_uploaded_image
+from app.services.image_validation_service import ImageValidationService, upload_error
 from app.services.firebase_service import FirebaseService
 from app.services.subscription_service import SubscriptionService
+from app.services.protected_file_service import remove_if_contained
+from app.core.paths import REPORT_DIR, UPLOAD_DIR
 
 router = APIRouter(
     prefix="/analysis",
@@ -31,60 +36,88 @@ router = APIRouter(
 @router.post(
     "/image",
     response_model=AnalysisResponse,
-    status_code=201,
+    status_code=200,
 )
 async def analyze_image(
     file: UploadFile = File(...),
     model: str = Form("efficientnet"),
     authorization: str | None = Header(None),
-    x_guest_id: str | None = Header(None),
     x_deepsight_client: str | None = Header(None),
     db: Session = Depends(get_db),
+    principal: AnalysisPrincipal = Depends(get_analysis_principal),
 ):
 
-    SubscriptionService.consume(
-        db,
-        authorization,
-        x_guest_id,
-        "image",
-        x_deepsight_client or "web",
+    storage_key = (
+        f"user-{principal.owner_user_id}"
+        if principal.owner_user_id is not None
+        else f"guest-{principal.guest_session_id}"
     )
-
-    saved_path = save_uploaded_image(file)
+    validated = await ImageValidationService.validate_and_store(file, storage_key)
+    saved_path = validated.path
 
     try:
+        usage = SubscriptionService.reserve(
+            db,
+            authorization,
+            str(principal.guest_session_id) if principal.guest_session_id else None,
+            "image",
+            x_deepsight_client or "web",
+        )
         result = AIService.analyze_image(
             str(saved_path),
             model,
         )
+    except HTTPException:
+        if "usage" in locals(): SubscriptionService.release(db, usage)
+        saved_path.unlink(missing_ok=True)
+        raise
     except ValueError as error:
+        if "usage" in locals(): SubscriptionService.release(db, usage)
+        saved_path.unlink(missing_ok=True)
         raise HTTPException(status_code=422, detail=str(error)) from error
     except ModelUnavailableError as error:
-        raise HTTPException(status_code=503, detail=str(error)) from error
+        if "usage" in locals(): SubscriptionService.release(db, usage)
+        saved_path.unlink(missing_ok=True)
+        raise upload_error(503, "MODEL_UNAVAILABLE", "The requested model is unavailable.") from error
+    except Exception as error:
+        logger.exception(
+            "Image analysis inference failed for user_id={} guest_session_id={}",
+            principal.owner_user_id,
+            principal.guest_session_id,
+        )
+        if "usage" in locals(): SubscriptionService.release(db, usage)
+        saved_path.unlink(missing_ok=True)
+        raise upload_error(500, "INFERENCE_FAILED", "Image inference failed safely.") from error
 
     if not result["success"]:
 
-        raise HTTPException(
-            status_code=400,
-            detail=result["message"],
-        )
+        SubscriptionService.release(db, usage)
+        saved_path.unlink(missing_ok=True)
+        raise upload_error(422, "NO_FACE_DETECTED", "No clear face was detected.")
+
+    selected_box = result.get("selected_face_box")
+    if selected_box and min(selected_box[2] - selected_box[0], selected_box[3] - selected_box[1]) < settings.IMAGE_MIN_FACE_SIZE:
+        SubscriptionService.release(db, usage)
+        saved_path.unlink(missing_ok=True)
+        raise upload_error(422, "FACE_TOO_SMALL", "The detected face is too small for reliable analysis.")
 
     file_size = round(
-        Path(saved_path).stat().st_size / (1024 * 1024),
+        validated.size_mb,
         2,
     )
 
-    analysis = AnalysisService.save(
+    try:
+        analysis = AnalysisService.save(
 
         db=db,
 
-        filename=file.filename,
+        filename=validated.original_filename,
 
         file_path=str(saved_path),
 
         file_type="Image",
 
-        file_extension=Path(file.filename).suffix,
+        file_extension=validated.extension,
 
         file_size=file_size,
 
@@ -114,9 +147,9 @@ async def analyze_image(
 
         face_count=result["face_count"],
 
-        image_width=result["image_width"],
+        image_width=validated.width,
 
-        image_height=result["image_height"],
+        image_height=validated.height,
 
         video_duration=None,
 
@@ -126,7 +159,43 @@ async def analyze_image(
 
         real_frames=None,
 
-    )
+        owner_user_id=principal.owner_user_id,
+
+        guest_session_id=principal.guest_session_id,
+
+        source={"extension": "browser_extension_image", "extension-pro": "browser_extension_image", "extension-video": "browser_extension_video", "live": "webcam"}.get(x_deepsight_client or "", "web"),
+
+        quality_metadata=validated.quality,
+
+        quality_warnings=(
+            validated.warnings
+            + (["Multiple faces detected; the largest face was analysed"] if result.get("face_count", 0) > 1 else [])
+            + (["Low-resolution face"] if result.get("selected_face_box") and (result["selected_face_box"][2] - result["selected_face_box"][0]) < 96 else [])
+        ),
+
+        selected_face_index=result.get("selected_face_index"),
+
+        selected_face_box=result.get("selected_face_box"),
+
+        face_detection_confidence=result.get("face_detection_confidence"),
+
+        )
+    except Exception as error:
+        logger.exception(
+            "Image analysis storage failed for user_id={} guest_session_id={}",
+            principal.owner_user_id,
+            principal.guest_session_id,
+        )
+        db.rollback()
+        SubscriptionService.release_key(db, usage.reservation_key)
+        saved_path.unlink(missing_ok=True)
+        raise upload_error(500, "STORAGE_FAILED", "The analysis result could not be stored safely.") from error
+
+    SubscriptionService.complete_key(db, usage.reservation_key)
+
+    if principal.guest_session is not None:
+        principal.guest_session.analysis_count += 1
+        db.commit()
 
     return analysis
 
@@ -137,9 +206,11 @@ async def analyze_image(
 )
 def get_history(
     db: Session = Depends(get_db),
+    principal: AnalysisPrincipal = Depends(get_analysis_principal),
 ):
-
-    return AnalysisRepository.get_all(db)
+    if principal.owner_user_id is None:
+        return []
+    return AnalysisRepository.list_owned(db, principal.owner_user_id)
 
 
 @router.get(
@@ -149,11 +220,13 @@ def get_history(
 def get_analysis(
     analysis_id: int,
     db: Session = Depends(get_db),
+    principal: AnalysisPrincipal = Depends(get_analysis_principal),
 ):
 
-    analysis = AnalysisRepository.get_by_id(
+    analysis = AnalysisRepository.get_accessible(
         db,
         analysis_id,
+        principal,
     )
 
     if analysis is None:
@@ -172,11 +245,13 @@ def get_analysis(
 def delete_analysis(
     analysis_id: int,
     db: Session = Depends(get_db),
+    principal: AnalysisPrincipal = Depends(get_analysis_principal),
 ):
 
-    analysis = AnalysisRepository.delete(
+    analysis = AnalysisRepository.delete_accessible(
         db,
         analysis_id,
+        principal,
     )
 
     if analysis is None:
@@ -187,6 +262,8 @@ def delete_analysis(
         )
 
     FirebaseService.delete_analysis(analysis_id)
+    remove_if_contained(analysis.file_path, UPLOAD_DIR)
+    remove_if_contained(str(REPORT_DIR / f"analysis_{analysis.id}.pdf"), REPORT_DIR)
 
     return {
 
